@@ -36,14 +36,10 @@ export default function LoginPage() {
 
   return (
     <div className={styles.container}>
-      {/* Header with logo and title */}
+      {/* Logo centered */}
       <div className={styles.header}>
-        <img src="/logo.png" alt="Logo" className={styles.logo} />
-        <div className={styles.headerText}>
-          <h1>MINISTRE DE L’INTERIEUR</h1>
-          <h2>WILAYA DE LA REGION OUJDA ANGAD</h2>
-        </div>
-      </div>
+  <img src="/logo-maroc.png" alt="Logo" className={styles.logo} />
+</div>
 
       {/* Login form */}
       <div className={styles.formWrapper}>

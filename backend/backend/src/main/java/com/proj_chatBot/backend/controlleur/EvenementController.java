@@ -14,19 +14,9 @@ public class EvenementController {
     @Autowired
     private EvenementService evenementService;
 
-    @GetMapping
-    public List<Evenement> getAllEvenements() {
-        return evenementService.getAllEvenements();
-    }
-
-    @GetMapping("/{id}")
-    public Optional<Evenement> getEvenementById(@PathVariable Long id) {
-        return evenementService.getEvenementById(id);
-    }
-
     @PostMapping
-    public Evenement createEvenement(@RequestBody Evenement evenement) {
-        return evenementService.createEvenement(evenement);
+    public Evenement createEvenement(@RequestBody Evenement evenement, @RequestParam Long utilisateurId) {
+        return evenementService.createEvenement(evenement, utilisateurId);
     }
 
     @PutMapping("/{id}")
@@ -34,8 +24,8 @@ public class EvenementController {
         return evenementService.updateEvenement(id, evenementDetails);
     }
 
-    @DeleteMapping("/{id}")
-    public void deleteEvenement(@PathVariable Long id) {
-        evenementService.deleteEvenement(id);
-    }
+
+
+
+
 }

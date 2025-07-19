@@ -1,10 +1,12 @@
 package com.proj_chatBot.backend.entities;
+import com.proj_chatBot.backend.enums.StatutEvenement;
 
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
 import java.util.List;
+
 @Data
 @Entity
 public class Evenement {
@@ -31,4 +33,8 @@ public class Evenement {
 
     @OneToMany(mappedBy = "evenement")
     private List<Participant> participants;
+
+    @Enumerated(EnumType.STRING)
+    private StatutEvenement statut;
+
 }
