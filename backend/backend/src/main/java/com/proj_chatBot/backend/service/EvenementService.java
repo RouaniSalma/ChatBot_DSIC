@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -29,26 +30,24 @@ public class EvenementService {
 
     // Création d'un événement
     public Evenement createEvenement(Evenement evenement, Long utilisateurId) {
-        // Associer l'utilisateur créateur
         Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
         evenement.setUtilisateur(utilisateur);
 
-        // Date de création
         evenement.setDateCreation(new Date());
 
-        // Gérer le type d'événement (créer ou lier à un existant)
+        // Associer le type existant
         TypeEvenement type = evenement.getType();
         if (type.getIdType() != null) {
             type = typeEvenementRepository.findById(type.getIdType())
                     .orElseThrow(() -> new RuntimeException("Type d'événement non trouvé"));
+            evenement.setType(type);
         } else {
-            type = typeEvenementRepository.save(type);
+            throw new RuntimeException("Type d'événement obligatoire !");
         }
-        evenement.setType(type);
 
-        // Calculer le statut
-        evenement.setStatut(calculerStatut(type.getDateDebut(), type.getDateFin()));
+        // Calculer le statut selon les dates de l'événement
+        evenement.setStatut(calculerStatut(evenement));
 
         return evenementRepository.save(evenement);
     }
@@ -72,21 +71,49 @@ public class EvenementService {
         }
         evenement.setType(type);
 
+        // Mettre à jour les dates et le lieu
+        evenement.setDateDebut(evenementDetails.getDateDebut());
+        evenement.setDateFin(evenementDetails.getDateFin());
+        evenement.setLieu(evenementDetails.getLieu());
+
         // Recalculer le statut
-        evenement.setStatut(calculerStatut(type.getDateDebut(), type.getDateFin()));
+        evenement.setStatut(calculerStatut(evenement));
 
         return evenementRepository.save(evenement);
     }
 
     // Méthode utilitaire pour calculer le statut
-    private StatutEvenement calculerStatut(LocalDateTime dateDebut, LocalDateTime dateFin) {
+    public StatutEvenement calculerStatut(Evenement evenement) {
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(dateDebut)) {
-            return StatutEvenement.PROCHAIN;
-        } else if (now.isAfter(dateFin)) {
+        if (evenement.getDateFin().isBefore(now)) {
             return StatutEvenement.TERMINE;
+        } else if (evenement.getDateDebut().isAfter(now)) {
+            return StatutEvenement.PROCHAIN;
         } else {
             return StatutEvenement.EN_COURS;
         }
+    }
+
+    // Récupérer tous les événements
+    public List<Evenement> getAllEvenements() {
+        List<Evenement> evenements = evenementRepository.findAll();
+        for (Evenement ev : evenements) {
+            ev.setStatut(calculerStatut(ev));
+        }
+        return evenements;
+    }
+
+    // Récupérer un événement par son ID
+    public Evenement getEvenementById(Long id) {
+        return evenementRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Événement non trouvé"));
+    }
+
+    // Supprimer un événement par son ID
+    public void deleteEvenement(Long id) {
+        if (!evenementRepository.existsById(id)) {
+            throw new RuntimeException("Événement non trouvé");
+        }
+        evenementRepository.deleteById(id);
     }
 }

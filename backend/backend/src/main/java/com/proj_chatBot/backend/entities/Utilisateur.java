@@ -1,11 +1,14 @@
 package com.proj_chatBot.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import com.proj_chatBot.backend.enums.Role;
 @Data
 @Entity
 public class Utilisateur {
@@ -25,16 +28,18 @@ public class Utilisateur {
     @Column(length = 100)
     private String prenom;
 
-    @Column(length = 50)
-    private String role; // 'admin' ou 'organisateur'
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     @ManyToOne
     @JoinColumn(name = "id_service")
+    @JsonBackReference
     private ServiceEntity service;
 
     private Date dateCreation;
     private LocalDateTime dernierAcces;
 
     @OneToMany(mappedBy = "utilisateur")
+    @JsonIgnore
     private List<Evenement> evenements;
 }

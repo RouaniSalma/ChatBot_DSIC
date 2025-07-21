@@ -11,28 +11,31 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  e.preventDefault();
+  setError('');
 
-    try {
-      const res = await fetch('http://localhost:8081/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    const res = await fetch('http://localhost:8081/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-      if (!res.ok) {
-        setError('Email ou mot de passe incorrect');
-        return;
-      }
-
-      const token = await res.text();
-      localStorage.setItem('token', token);
-      router.push('/dashboard');
-    } catch (err) {
-      setError('Erreur de connexion au serveur');
+    if (!res.ok) {
+      setError('Email ou mot de passe incorrect');
+      return;
     }
-  };
+
+    // On suppose que le backend renvoie { token: "...", utilisateur: { idUtilisateur: ... } }
+  const data = await res.json();
+  console.log('Réponse backend:', data); // Ajoute ce log
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('idUtilisateur', data.utilisateur.idUtilisateur);
+  router.push('/dashboard');
+  } catch (err) {
+    setError('Erreur de connexion au serveur');
+  }
+};
 
   return (
     <div className={styles.container}>

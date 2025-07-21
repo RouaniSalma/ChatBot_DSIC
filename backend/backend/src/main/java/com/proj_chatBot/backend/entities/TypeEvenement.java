@@ -1,7 +1,12 @@
 package com.proj_chatBot.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.proj_chatBot.backend.enums.Role;
+import com.proj_chatBot.backend.enums.TypeEvent;
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,15 +18,10 @@ public class TypeEvenement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idType;
 
-    @Column(length = 100)
-    private String nom;
-
-    private LocalDateTime dateDebut;
-    private LocalDateTime dateFin;
-
-    @Column(length = 255)
-    private String lieu;
+    @Enumerated(EnumType.STRING)
+    private TypeEvent typeEvent; // Enum: RÉUNION, CONFÉRENCE, etc.
 
     @OneToMany(mappedBy = "type")
+    @JsonIgnore
     private List<Evenement> evenements;
 }

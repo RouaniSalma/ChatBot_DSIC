@@ -1,5 +1,6 @@
 package com.proj_chatBot.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -15,5 +16,6 @@ public class StatutParticipant {
     private String libelle;
 
     @OneToMany(mappedBy = "statut")
+    @JsonIgnore
     private List<Participant> participants;
 }

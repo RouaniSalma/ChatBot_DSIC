@@ -12,6 +12,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.nio.charset.StandardCharsets;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+
 
 @Component
 public class JwtUtil {
@@ -35,6 +38,14 @@ public class JwtUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
+    }
+
+    public String extractRole(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(key) // Utilise ta clé secrète
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("role", String.class);
     }
 
     // Extraire le nom d'utilisateur du token

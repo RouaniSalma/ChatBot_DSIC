@@ -1,5 +1,6 @@
 package com.proj_chatBot.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -26,10 +27,10 @@ public class Participant {
     private String signature;
 
     @ManyToOne
-    @JoinColumn(name = "id_statut")
     private StatutParticipant statut;
 
     @ManyToOne
     @JoinColumn(name = "id_evenement")
+    @JsonIgnore
     private Evenement evenement;
 }
