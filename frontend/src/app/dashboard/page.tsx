@@ -297,7 +297,7 @@ if (resTypes.ok) {
       {/* Titre + bouton ajouter */}
       <div className={styles.topBar}>
         <h1 className={styles.title}>Liste des événements</h1>
-        <button className={styles.addBtn} onClick={openCreate}>+ Ajouter un événement</button>
+        <button className={styles.addBtn} onClick={openCreate}>+ Ajouter événement</button>
       </div>
 
       {/* Tableau des événements corrigé */}
