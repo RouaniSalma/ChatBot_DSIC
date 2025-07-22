@@ -111,8 +111,8 @@
 .table th {
   text-align: left;
   padding: 1rem;
-  background-color: #f9fafb;
-  color: #6b7280;
+  background-color: #334155; /* Gris-bleu foncé */
+  color: white;
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.75rem;
@@ -424,5 +424,89 @@
   .modalBtn {
     width: 100%;
   }
+}
+.filterBar {
+   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 2rem 1.5rem;
+  padding: 1rem 1.5rem;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filterGroup label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.filterGroup select {
+  padding: 0.65rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background-color: white;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 180px;
+}
+.filterGroup select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+.paginationContainer {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 2rem;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background-color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.pagination button {
+  padding: 0.5rem 1.25rem;
+  background-color: #2210e1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #4338ca;
+  transform: translateY(-1px);
+}
+
+.pagination button:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  font-size: 0.95rem;
+  color: #4b5563;
+  font-weight: 500;
+  min-width: 120px;
+  text-align: center;
 }
 

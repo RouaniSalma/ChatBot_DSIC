@@ -9,6 +9,9 @@ import com.proj_chatBot.backend.repository.EvenementRepository;
 import com.proj_chatBot.backend.repository.TypeEvenementRepository;
 import com.proj_chatBot.backend.repository.UtilisateurRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -115,5 +118,30 @@ public class EvenementService {
             throw new RuntimeException("Événement non trouvé");
         }
         evenementRepository.deleteById(id);
+    }
+    // Dans EvenementService.java
+
+    // Récupérer les événements paginés et filtrés
+    public Page<Evenement> getEvenementsFiltresEtPages(Optional<Long> typeId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        if (typeId.isPresent()) {
+            TypeEvenement type = typeEvenementRepository.findById(typeId.get())
+                    .orElseThrow(() -> new RuntimeException("Type d'événement non trouvé"));
+            return evenementRepository.findByType(type, pageable);
+        } else {
+            return evenementRepository.findAll(pageable);
+        }
+    }
+
+    // Compter les événements par type
+    public long countEvenementsByType(Optional<Long> typeId) {
+        if (typeId.isPresent()) {
+            TypeEvenement type = typeEvenementRepository.findById(typeId.get())
+                    .orElseThrow(() -> new RuntimeException("Type d'événement non trouvé"));
+            return evenementRepository.countByType(type);
+        } else {
+            return evenementRepository.count();
+        }
     }
 }

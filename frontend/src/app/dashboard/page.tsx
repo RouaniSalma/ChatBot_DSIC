@@ -23,6 +23,15 @@ interface Evenement {
   statut: string;
   // Les autres champs comme 'utilisateur' et 'participants' ne sont pas nécessaires pour le formulaire.
 }
+interface PaginatedResponse {
+  evenements: Evenement[];
+  currentPage: number;
+  totalItems: number;
+  totalPages: number;
+}
+interface FilterState {
+  typeId?: number | null;
+}
 
 const STATUTS = [
   { value: 'PROCHAIN', label: 'Prochain' },
@@ -32,8 +41,23 @@ const STATUTS = [
 
 export default function Dashboard() {
   console.log("Dashboard component rendu");
+  const [filter, setFilter] = useState<FilterState>({ typeId: null });
+  const [pagination, setPagination] = useState({
+    currentPage: 0,
+    totalItems: 0,
+    totalPages: 0,
+    itemsPerPage: 4,
+  });
   const [evenements, setEvenements] = useState<Evenement[]>([]);
   const [types, setTypes] = useState<TypeEvenement[]>([]); // État pour les types d'événements
+  useEffect(() => {
+  console.log("Filtre changé - typeId:", filter.typeId);
+  refresh(0); // Toujours rafraîchir à la première page quand le filtre change
+}, [filter.typeId]); // Dépendance uniquement sur typeId
+  useEffect(() => {
+  console.log("Current filter:", filter);
+  console.log("Current events:", evenements);
+}, [filter, evenements]);
   const [modal, setModal] = useState<'create' | 'edit' | 'details' | null>(null);
   const [selected, setSelected] = useState<Evenement | null>(null);
   // État du formulaire corrigé pour correspondre à l'entité Evenement
@@ -102,42 +126,68 @@ export default function Dashboard() {
   };
 
   // Fetch des événements et des types
-  const refresh = async () => {
-    console.log("refresh called");
-    const token = localStorage.getItem('token');
-     console.log("token récupéré:", token);
-    if (!token) return;
+  const refresh = async (page = pagination.currentPage) => {
+  const token = localStorage.getItem('token');
+  if (!token) return;
 
-    try {
-      const [resEvents, resTypes] = await Promise.all([
-        fetch('http://localhost:8081/api/evenements', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
-        fetch('http://localhost:8081/api/types-evenement', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
-      ]);
-
-      if (resEvents.ok) {
-  const eventsData = await resEvents.json();
-  console.log("Données des événements:", eventsData);
-  setEvenements(eventsData);
-} else {
-  console.error("Erreur lors de la récupération des événements:", resEvents.status, await resEvents.text());
-}
-
-if (resTypes.ok) {
-  const typesData = await resTypes.json();
-  console.log("Données des types reçues JUSTE AVANT setTypes:", typesData);
-  setTypes(typesData);
-} else {
-  console.error("Erreur lors de la récupération des types:", resTypes.status, await resTypes.text());
-}
-    } catch (error) {
-      console.error("Erreur lors du chargement des données:", error);
+  try {
+    // Construction robuste de l'URL
+    const params = new URLSearchParams({
+      page: page.toString(),
+      size: pagination.itemsPerPage.toString()
+    });
+    
+    // Ajout conditionnel du typeId
+    if (filter.typeId !== undefined && filter.typeId !== null) {
+      params.append('typeId', filter.typeId.toString());
     }
-  };
 
+    const url = `http://localhost:8081/api/evenements/filter?${params.toString()}`;
+    console.log("URL envoyée:", url); // Vérifiez cette ligne !
+
+    const [resEvents, resTypes] = await Promise.all([
+      fetch(url, { 
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }),
+      fetch('http://localhost:8081/api/types-evenement', { 
+        headers: { 'Authorization': `Bearer ${token}` } 
+      })
+    ]);
+
+    // 3. Traitement de la réponse des événements
+    if (resEvents.ok) {
+      const data: PaginatedResponse = await resEvents.json();
+      console.log("Données des événements reçues:", data);
+      
+      setEvenements(data.evenements || []);
+      setPagination({
+        ...pagination,
+        currentPage: data.currentPage || 0,
+        totalItems: data.totalItems || 0,
+        totalPages: data.totalPages || 0,
+      });
+    } else {
+      const errorText = await resEvents.text();
+      console.error("Erreur événements:", resEvents.status, errorText);
+    }
+
+    // 4. Traitement de la réponse des types
+    if (resTypes.ok) {
+      const typesData = await resTypes.json();
+      console.log("Types d'événements reçus:", typesData);
+      setTypes(typesData);
+    } else {
+      const errorText = await resTypes.text();
+      console.error("Erreur types:", resTypes.status, errorText);
+    }
+
+  } catch (error) {
+    console.error("Erreur lors du chargement des données:", error);
+  }
+};
   useEffect(() => {
     const token = localStorage.getItem('token');
      console.log("useEffect token:", token);
@@ -145,14 +195,14 @@ if (resTypes.ok) {
       router.push('/login');
       return;
     }
-    refresh();
+    /*refresh();*/
 
     // Rafraîchissement automatique toutes les 30 secondes
     const interval = setInterval(() => {
-      refresh();
+      refresh(pagination.currentPage); 
     }, 30000); // 30 000 ms = 30 secondes
     return () => clearInterval(interval);
-  }, [router]);
+  }, [router, filter.typeId, pagination.currentPage]);
 
   function getUserIdFromToken() {
     const token = localStorage.getItem('token');
@@ -299,7 +349,29 @@ if (resTypes.ok) {
         <h1 className={styles.title}>Liste des événements</h1>
         <button className={styles.addBtn} onClick={openCreate}>+ Ajouter événement</button>
       </div>
-
+      {/* Nouveau bloc: Filtre et pagination */}
+    <div className={styles.filterBar}>
+  <div className={styles.filterGroup}>
+    <label>Filtrer par type :</label>
+    <select
+      value={filter.typeId ?? ''}
+      onChange={(e) => {
+        const typeId = e.target.value ? parseInt(e.target.value) : null;
+        setFilter({ typeId });
+        setPagination(prev => ({ ...prev, currentPage: 0 }));
+      }}
+    >
+      <option value="">Tous les types</option>
+      {types.map((type) => (
+        <option key={type.idType} value={type.idType}>
+          {type.typeEvent}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
+      
+      
       {/* Tableau des événements corrigé */}
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
@@ -333,7 +405,28 @@ if (resTypes.ok) {
           </tbody>
         </table>
       </div>
-
+{/* Pagination en bas */}
+<div className={styles.paginationContainer}>
+  <div className={styles.pagination}>
+    <button
+      onClick={() => refresh(pagination.currentPage - 1)}
+      disabled={pagination.currentPage === 0}
+    >
+      Précédent
+    </button>
+    
+    <span>
+      Page {pagination.currentPage + 1} sur {pagination.totalPages}
+    </span>
+    
+    <button
+      onClick={() => refresh(pagination.currentPage + 1)}
+      disabled={pagination.currentPage >= pagination.totalPages - 1}
+    >
+      Suivant
+    </button>
+  </div>
+</div>
       {/* Modals */}
       {(modal === 'create' || modal === 'edit') && (
   <div className={styles.modalOverlay}>
