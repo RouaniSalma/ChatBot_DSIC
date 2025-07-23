@@ -49,7 +49,7 @@ export default function LoginPage() {
       <div className={styles.loginWrapper}>
         {/* Illustration à gauche */}
         <div className={styles.imageSection}>
-          <img src="/login-illustration.png" alt="Illustration" className={styles.illustration} />
+          <img src="/illustration.png" alt="Illustration" className={styles.illustration} />
         </div>
 
         {/* Formulaire à droite */}
@@ -60,8 +60,7 @@ export default function LoginPage() {
     <img src="/logo-maroc.png" alt="Logo" className={styles.logo} />
     <div className={styles.divider}></div>
   </div>
-            <h2>Bienvenue </h2>
-            <p className={styles.subtitle}>Connectez-vous à votre espace personnel</p>
+            <h2>Gestion des événements </h2>
 
             <div>
               <label className={styles.label}>Email</label>
@@ -107,7 +106,7 @@ export default function LoginPage() {
       </div>
 
       <footer className={styles.footer}>
-        &copy; 2025 Ministère de l’Intérieur - Wilaya de la Région Oujda Angad. Tous droits réservés.
+        &copy; 2025 Ministère de l’Intérieur - Wilaya de la région de l'oriental - Préfecture d'Oujda Angad. Tous droits réservés.
       </footer>
     </div>
   );
