@@ -146,19 +146,19 @@
   padding: 14px 0;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(135deg, #fa7d73 0%, #d6a5ad 100%);
+  background: linear-gradient(135deg, #6c63ff 0%, #4a42e8 100%);
   color: #fff;
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
   margin-top: 0.5rem;
   transition: all 0.3s;
-  box-shadow: 0 4px 6px rgb(214,165,173);
+  box-shadow: 0 4px 6px rgba(108, 99, 255, 0.2);
 }
 
 .button:hover {
-  background-color: #d6a5ad;
-  box-shadow: 0 6px 8px rgb(214,165,173);
+  background: linear-gradient(135deg, #5a52e0 0%, #3a32d8 100%);
+  box-shadow: 0 6px 8px rgba(108, 99, 255, 0.3);
   transform: translateY(-1px);
 }
 

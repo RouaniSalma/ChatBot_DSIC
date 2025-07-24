@@ -232,41 +232,36 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
   const utilisateurId = localStorage.getItem('idUtilisateur');
   
   if (!utilisateurId) {
-    addNotification("Utilisateur non authentifié !", 'error');
+    alert("Utilisateur non authentifié !");
     setLoading(false);
     return;
   }
 
   const token = localStorage.getItem('token');
   if (!token) {
-    addNotification("Token d'authentification manquant !", 'error');
+    alert("Token d'authentification manquant !");
     setLoading(false);
     return;
   }
 
   // Validation supplémentaire
-  if (!form.titre || !form.lieu || !form.type.idType) {
-    addNotification("Veuillez remplir tous les champs obligatoires !", 'error');
+  if (!form.titre || !form.dateDebut || !form.dateFin || !form.lieu || !form.type.idType) {
+    alert("Veuillez remplir tous les champs obligatoires !");
     setLoading(false);
     return;
   }
 
-  // Fonction pour formater les dates pour le backend
-  const formatDateForBackend = (isoString: string) => {
-    if (!isoString) return '';
-    return isoString.substring(0, 19); // Garde seulement les 19 premiers caractères
+  // Formatage des dates
+  const formatDate = (d: string) => d.length === 16 ? `${d}:00` : d.substring(0, 19);
+
+  const evenementToSend = {
+    ...form,
+    dateDebut: formatDate(form.dateDebut),
+    dateFin: formatDate(form.dateFin),
+    type: { idType: Number(form.type.idType) }
   };
 
   try {
-    const evenementToSend = {
-      ...form,
-      dateDebut: formatDateForBackend(form.dateDebut),
-      dateFin: formatDateForBackend(form.dateFin),
-      type: { idType: Number(form.type.idType) }
-    };
-
-    console.log('Données envoyées:', evenementToSend); // Pour débogage
-
     const response = await fetch(`http://localhost:8081/api/evenements?utilisateurId=${utilisateurId}`, {
       method: 'POST',
       headers: { 
@@ -277,15 +272,16 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Erreur lors de la création");
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Erreur lors de la création");
     }
 
-    const text = await response.text();
-    const createdEvent = text ? JSON.parse(text) : { titre: form.titre };
+    const createdEvent = await response.json();
     
-    addNotification(`Événement "${createdEvent.titre}" créé avec succès !`, 'success');
+    // Message de succès
+    alert(`Événement "${createdEvent.titre}" créé avec succès !`);
     
+    // Réinitialisation et fermeture
     setModal(null);
     setForm({
       titre: '',
@@ -298,14 +294,12 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
       statut: 'PROCHAIN',
     });
     
-    refresh(0);
+    // Rafraîchir la liste
+    refresh(0); // Retour à la première page
     
   } catch (error) {
     console.error("Erreur création:", error);
-    addNotification(
-      `Erreur lors de la création: ${error instanceof Error ? error.message : String(error)}`,
-      'error'
-    );
+    alert(`Erreur lors de la création: ${error instanceof Error ? error.message : String(error)}`);
   } finally {
     setLoading(false);
   }
@@ -313,7 +307,7 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
 
   const handleEdit = async () => {
   if (!selected?.idEvenement) {
-    addNotification("Aucun événement sélectionné !", 'error');
+    alert("Aucun événement sélectionné !");
     return;
   }
 
@@ -321,42 +315,36 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
   const token = localStorage.getItem('token');
   
   if (!token) {
-    addNotification("Token d'authentification manquant !", 'error');
+    alert("Token d'authentification manquant !");
     setLoading(false);
     return;
   }
 
-  // Validation des champs obligatoires
-  if (!form.titre || !form.lieu || !form.type.idType) {
-    addNotification("Veuillez remplir tous les champs obligatoires !", 'error');
+  // Validation
+  if (!form.titre || !form.dateDebut || !form.dateFin || !form.lieu || !form.type.idType) {
+    alert("Veuillez remplir tous les champs obligatoires !");
     setLoading(false);
     return;
   }
 
-  // Validation des dates
-  if (new Date(form.dateFin) <= new Date(form.dateDebut)) {
-    addNotification("La date de fin doit être postérieure à la date de début !", 'error');
+  // Vérification des dates
+  if (new Date(form.dateFin) < new Date(form.dateDebut)) {
+    alert("La date de fin doit être postérieure à la date de début !");
     setLoading(false);
     return;
   }
 
-  // Fonction pour formater les dates pour le backend
-  const formatDateForBackend = (isoString: string) => {
-    if (!isoString) return '';
-    // Garde seulement les 19 premiers caractères (supprime le timezone)
-    return isoString.substring(0, 19);
+  // Formatage des dates
+  const formatDate = (d: string) => d.length === 16 ? `${d}:00` : d.substring(0, 19);
+
+  const evenementToSend = {
+    ...form,
+    dateDebut: formatDate(form.dateDebut),
+    dateFin: formatDate(form.dateFin),
+    type: { idType: Number(form.type.idType) }
   };
 
   try {
-    const evenementToSend = {
-      ...form,
-      dateDebut: formatDateForBackend(form.dateDebut),
-      dateFin: formatDateForBackend(form.dateFin),
-      type: { idType: Number(form.type.idType) }
-    };
-
-    console.log('Données envoyées:', evenementToSend); // Pour débogage
-
     const response = await fetch(`http://localhost:8081/api/evenements/${selected.idEvenement}`, {
       method: 'PUT',
       headers: { 
@@ -367,26 +355,25 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Erreur lors de la modification");
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Erreur lors de la modification");
     }
 
-    // Gestion de la réponse vide
-    const text = await response.text();
-    const updatedEvent = text ? JSON.parse(text) : { titre: form.titre };
-
-    addNotification(`Événement "${updatedEvent.titre}" modifié avec succès !`, 'success');
+    const updatedEvent = await response.json();
     
+    // Message de succès
+    alert(`Événement "${updatedEvent.titre}" modifié avec succès !`);
+    
+    // Fermeture et réinitialisation
     setModal(null);
     setSelected(null);
+    
+    // Rafraîchir en conservant la page actuelle
     refresh(pagination.currentPage);
     
   } catch (error) {
     console.error("Erreur modification:", error);
-    addNotification(
-      `Erreur lors de la modification: ${error instanceof Error ? error.message : String(error)}`,
-      'error'
-    );
+    alert(`Erreur lors de la modification: ${error instanceof Error ? error.message : String(error)}`);
   } finally {
     setLoading(false);
   }
@@ -407,42 +394,28 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
     router.push('/login');
   };
 // Formatage des dates en français
-// Formatage des dates en français avec gestion des fuseaux horaires
-const formatFrenchDateTime = (isoString: string) => {
-  if (!isoString) return 'Non défini'
-  
-  try {
-    const date = new Date(isoString)
-    
-    // Options de formatage
-    const options: Intl.DateTimeFormatOptions = {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false // Format 24h
-    }
-    
-    return new Intl.DateTimeFormat('fr-FR', options).format(date)
-  } catch (error) {
-    console.error('Erreur de formatage de date:', error)
-    return isoString // Retourne la valeur originale en cas d'erreur
-  }
+const formatFrenchDate = (isoString: string) => {
+  if (!isoString) return ''
+
+  const date = new Date(isoString)
+  return date.toLocaleString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
   // Helpers pour ouvrir les modales
   const openCreate = () => {
-    // Réinitialise le formulaire avec des valeurs par défaut
-  const now = new Date();
-  const oneHourLater = new Date(now.getTime() + 3600000); // +1 heure
     // Réinitialise le formulaire avec des valeurs par défaut
     setForm({
       titre: '',
       description: '',
       capaciteMax: 0,
       lieu: '',
-      dateDebut: now.toISOString(),
-    dateFin: oneHourLater.toISOString(),
+      dateDebut: '',
+      dateFin: '',
       type: { idType: 0 },
       statut: 'PROCHAIN',
     });
@@ -461,7 +434,7 @@ const formatFrenchDateTime = (isoString: string) => {
     
     setForm({
       ...ev,
-      type: ev.type || { idType: 0 }, // Valeur par défaut si type est null
+      type: ev.type || { idType: '' },
       dateDebut: (ev.dateDebut),
       dateFin: (ev.dateFin),
     });
@@ -539,7 +512,7 @@ const formatFrenchDateTime = (isoString: string) => {
                 <td>
         {types.find(t => t.idType === ev.type?.idType)?.typeEvent || 'N/A'}
       </td>
-                <td>{formatFrenchDateTime(ev.dateDebut)}</td>
+                <td>{formatFrenchDate(ev.dateDebut)}</td>
                 <td>
                   <span className={`${styles.status} ${ev.statut ? styles[ev.statut.toLowerCase()] : ''}`}>
                     {STATUTS.find(s => s.value === ev.statut)?.label || ev.statut || 'N/A'}
@@ -703,8 +676,8 @@ const formatFrenchDateTime = (isoString: string) => {
             <p><b>Description :</b> {selected.description}</p>
             <p><b>Capacité max :</b> {selected.capaciteMax}</p>
             <p><b>Type :</b> {types.find(t => t.idType === selected.type?.idType)?.typeEvent || 'N/A'}</p>
-            <p><b>Date début :</b> {formatFrenchDateTime(selected.dateDebut)}</p>
-            <p><b>Date fin :</b> {formatFrenchDateTime(selected.dateFin)}</p>
+            <p><b>Date début :</b> {new Date(selected.dateDebut).toLocaleString()}</p>
+            <p><b>Date fin :</b> {new Date(selected.dateFin).toLocaleString()}</p>
             <p><b>Lieu :</b> {selected.lieu}</p>
             <p><b>Statut :</b> {STATUTS.find(s => s.value === selected.statut)?.label || selected.statut}</p>
             <div className={styles.modalActions}>

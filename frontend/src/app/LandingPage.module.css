@@ -1,0 +1,153 @@
+.main {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f9fafc;
+  color: #333;
+}
+
+.header {
+  background-color: #fff;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1a3a8b;
+}
+
+.nav a {
+  margin-left: 1.5rem;
+  text-decoration: none;
+  color: #1a3a8b;
+}
+
+.nav a:hover {
+  text-decoration: underline;
+}
+
+.hero {
+  background-color: #eaf1ff;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.heroContent h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #102c6d;
+}
+
+.heroContent p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: #444;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.buttons button {
+  padding: 0.8rem 1.6rem;
+  border: none;
+  background-color: #1a3a8b;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: 0.3s;
+}
+
+.buttons button:hover {
+  background-color: #274bb3;
+}
+
+.outline {
+  background-color: transparent;
+  color: #1a3a8b;
+  border: 2px solid #1a3a8b;
+}
+
+.outline:hover {
+  background-color: #dbe7ff;
+}
+
+.roles {
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.roles h3 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: #1a3a8b;
+}
+
+.roleCards {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .roleCards {
+    flex-direction: row;
+    justify-content: space-around;
+  }
+}
+
+.card {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  flex: 1;
+}
+
+.card h4 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  color: #1a3a8b;
+}
+
+.card p {
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.cta {
+  background-color: #1a3a8b;
+  color: white;
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.cta h4 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.cta p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.footer {
+  background-color: #101e4a;
+  color: #ccc;
+  text-align: center;
+  padding: 1.5rem 2rem;
+  font-size: 0.9rem;
+}
