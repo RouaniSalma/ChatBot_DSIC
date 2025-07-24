@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { FrenchDateTimePicker } from './FrenchDateTimePicker'
 import styles from './Dashboard.module.css';
 
 // Interface alignée avec l'entité Java TypeEvenement
@@ -32,15 +33,21 @@ interface PaginatedResponse {
 interface FilterState {
   typeId?: number | null;
 }
+interface Notification {
+  message: string;
+  type: 'success' | 'error' | 'info';
+  id: number;
+}
 
 const STATUTS = [
-  { value: 'PROCHAIN', label: 'Prochain' },
+  { value: 'PROCHAIN', label: 'À venir' },
   { value: 'EN_COURS', label: 'En cours' },
-  { value: 'TERMINE', label: 'Terminé' },
+  { value: 'TERMINE', label: 'Passé' },
 ];
 
 export default function Dashboard() {
   console.log("Dashboard component rendu");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<FilterState>({ typeId: null });
   const [pagination, setPagination] = useState({
     currentPage: 0,
@@ -81,7 +88,15 @@ export default function Dashboard() {
   });
 
   const MAX_TITRE_LENGTH = 100;
-
+const addNotification = (message: string, type: 'success' | 'error' | 'info') => {
+  const id = Date.now();
+  setNotifications(prev => [...prev, { message, type, id }]);
+  
+  // Suppression automatique après 5 secondes
+  setTimeout(() => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, 5000);
+};
   // Fonctions de validation
   const validateText = (value: string) => {
     // Autorise lettres, espaces, accents, tirets, apostrophes
@@ -212,68 +227,157 @@ export default function Dashboard() {
   }
 
   const handleCreate = async () => {
-    console.log('handleCreate appelé');
-    setLoading(true);
-    const utilisateurId = localStorage.getItem('idUtilisateur');
-    if (!utilisateurId) {
-      alert("Utilisateur non authentifié !");
-      setLoading(false);
-      return;
-    }
+  console.log('handleCreate appelé');
+  setLoading(true);
+  const utilisateurId = localStorage.getItem('idUtilisateur');
+  
+  if (!utilisateurId) {
+    alert("Utilisateur non authentifié !");
+    setLoading(false);
+    return;
+  }
 
-    const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert("Token d'authentification manquant !");
+    setLoading(false);
+    return;
+  }
 
-    // Formatage des dates (s'assure qu'il y a les secondes)
-    const formatDate = (d: string) => d.length === 16 ? `${d}:00` : d.substring(0, 19);
+  // Validation supplémentaire
+  if (!form.titre || !form.dateDebut || !form.dateFin || !form.lieu || !form.type.idType) {
+    alert("Veuillez remplir tous les champs obligatoires !");
+    setLoading(false);
+    return;
+  }
 
-    const evenementToSend = {
-      ...form,
-      dateDebut: formatDate(form.dateDebut),
-      dateFin: formatDate(form.dateFin),
-      type: { idType: Number(form.type.idType) } // Assurez-vous que c'est un nombre
-    };
+  // Formatage des dates
+  const formatDate = (d: string) => d.length === 16 ? `${d}:00` : d.substring(0, 19);
 
-    const res = await fetch(`http://localhost:8081/api/evenements?utilisateurId=${utilisateurId}`, {
+  const evenementToSend = {
+    ...form,
+    dateDebut: formatDate(form.dateDebut),
+    dateFin: formatDate(form.dateFin),
+    type: { idType: Number(form.type.idType) }
+  };
+
+  try {
+    const response = await fetch(`http://localhost:8081/api/evenements?utilisateurId=${utilisateurId}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Authorization': `Bearer ${token}` 
+      },
       body: JSON.stringify(evenementToSend),
     });
-    console.log('Status:', res.status);
-    if (!res.ok) {
-      const errorText = await res.text();
-      alert('Erreur lors de la création : ' + errorText);
-      setLoading(false);
-      return;
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Erreur lors de la création");
     }
+
+    const createdEvent = await response.json();
+    
+    // Message de succès
+    alert(`Événement "${createdEvent.titre}" créé avec succès !`);
+    
+    // Réinitialisation et fermeture
     setModal(null);
+    setForm({
+      titre: '',
+      description: '',
+      capaciteMax: 0,
+      lieu: '',
+      dateDebut: '',
+      dateFin: '',
+      type: { idType: 0 },
+      statut: 'PROCHAIN',
+    });
+    
+    // Rafraîchir la liste
+    refresh(0); // Retour à la première page
+    
+  } catch (error) {
+    console.error("Erreur création:", error);
+    alert(`Erreur lors de la création: ${error instanceof Error ? error.message : String(error)}`);
+  } finally {
     setLoading(false);
-    refresh(); // Rafraîchit les données
-  };
+  }
+};
 
   const handleEdit = async () => {
-    if (!selected?.idEvenement) return;
-    setLoading(true);
-    const token = localStorage.getItem('token');
+  if (!selected?.idEvenement) {
+    alert("Aucun événement sélectionné !");
+    return;
+  }
 
-    const formatDate = (d: string) => d.length === 16 ? `${d}:00` : d.substring(0, 19);
+  setLoading(true);
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    alert("Token d'authentification manquant !");
+    setLoading(false);
+    return;
+  }
 
-    const evenementToSend = {
-      ...form,
-      dateDebut: formatDate(form.dateDebut),
-      dateFin: formatDate(form.dateFin),
-      type: { idType: Number(form.type.idType) }
-    };
+  // Validation
+  if (!form.titre || !form.dateDebut || !form.dateFin || !form.lieu || !form.type.idType) {
+    alert("Veuillez remplir tous les champs obligatoires !");
+    setLoading(false);
+    return;
+  }
 
-    await fetch(`http://localhost:8081/api/evenements/${selected.idEvenement}`, {
+  // Vérification des dates
+  if (new Date(form.dateFin) < new Date(form.dateDebut)) {
+    alert("La date de fin doit être postérieure à la date de début !");
+    setLoading(false);
+    return;
+  }
+
+  // Formatage des dates
+  const formatDate = (d: string) => d.length === 16 ? `${d}:00` : d.substring(0, 19);
+
+  const evenementToSend = {
+    ...form,
+    dateDebut: formatDate(form.dateDebut),
+    dateFin: formatDate(form.dateFin),
+    type: { idType: Number(form.type.idType) }
+  };
+
+  try {
+    const response = await fetch(`http://localhost:8081/api/evenements/${selected.idEvenement}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Authorization': `Bearer ${token}` 
+      },
       body: JSON.stringify(evenementToSend),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Erreur lors de la modification");
+    }
+
+    const updatedEvent = await response.json();
+    
+    // Message de succès
+    alert(`Événement "${updatedEvent.titre}" modifié avec succès !`);
+    
+    // Fermeture et réinitialisation
     setModal(null);
     setSelected(null);
+    
+    // Rafraîchir en conservant la page actuelle
+    refresh(pagination.currentPage);
+    
+  } catch (error) {
+    console.error("Erreur modification:", error);
+    alert(`Erreur lors de la modification: ${error instanceof Error ? error.message : String(error)}`);
+  } finally {
     setLoading(false);
-    refresh();
-  };
+  }
+};
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('Supprimer cet événement ?')) return;
@@ -289,7 +393,19 @@ export default function Dashboard() {
     localStorage.removeItem('token');
     router.push('/login');
   };
+// Formatage des dates en français
+const formatFrenchDate = (isoString: string) => {
+  if (!isoString) return ''
 
+  const date = new Date(isoString)
+  return date.toLocaleString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
   // Helpers pour ouvrir les modales
   const openCreate = () => {
     // Réinitialise le formulaire avec des valeurs par défaut
@@ -315,12 +431,12 @@ export default function Dashboard() {
   const openEdit = (ev: Evenement) => {
     setSelected(ev);
     // Prépare les dates pour les champs datetime-local
-    const formatForInput = (dateStr: string) => dateStr ? dateStr.substring(0, 16) : '';
+    
     setForm({
       ...ev,
       type: ev.type || { idType: '' },
-      dateDebut: formatForInput(ev.dateDebut),
-      dateFin: formatForInput(ev.dateFin),
+      dateDebut: (ev.dateDebut),
+      dateFin: (ev.dateFin),
     });
     setErrors({
       titre: '',
@@ -340,7 +456,10 @@ export default function Dashboard() {
     <div className={styles.container}>
       {/* Header */}
       <header className={styles.header}>
-        <img src="/logo-maroc.png" alt="Logo" className={styles.logo} />
+        <div className={styles.branding}>
+    <img src="/logo-maroc.png" alt="Logo" className={styles.logo} />
+      <h1 className={styles.appTitle}>GE</h1>
+  </div>
         <button className={styles.logoutBtn} onClick={handleLogout}>Déconnexion</button>
       </header>
 
@@ -379,6 +498,7 @@ export default function Dashboard() {
             <tr>
               <th>ID</th>
               <th>Titre</th>
+              <th>Type</th>
               <th>Date début</th>
               <th>Statut</th>
               <th>Actions</th>
@@ -389,7 +509,10 @@ export default function Dashboard() {
               <tr key={ev.idEvenement}>
                 <td>{ev.idEvenement}</td>
                 <td>{ev.titre}</td>
-                <td>{new Date(ev.dateDebut).toLocaleString()}</td>
+                <td>
+        {types.find(t => t.idType === ev.type?.idType)?.typeEvent || 'N/A'}
+      </td>
+                <td>{formatFrenchDate(ev.dateDebut)}</td>
                 <td>
                   <span className={`${styles.status} ${ev.statut ? styles[ev.statut.toLowerCase()] : ''}`}>
                     {STATUTS.find(s => s.value === ev.statut)?.label || ev.statut || 'N/A'}
@@ -492,23 +615,20 @@ export default function Dashboard() {
             </select>
           </div>
           <div className={styles.formGroup}>
-            <label>Date de début</label>
-            <input
-              type="datetime-local"
-              value={form.dateDebut}
-              onChange={e => setForm(f => ({ ...f, dateDebut: e.target.value }))}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Date de fin</label>
-            <input
-              type="datetime-local"
-              value={form.dateFin}
-              onChange={e => setForm(f => ({ ...f, dateFin: e.target.value }))}
-              required
-            />
-          </div>
+  <FrenchDateTimePicker
+    selected={form.dateDebut}
+    onChange={(date) => setForm(f => ({ ...f, dateDebut: date }))}
+    label="Date de début "
+  />
+</div>
+
+<div className={styles.formGroup}>
+  <FrenchDateTimePicker
+    selected={form.dateFin}
+    onChange={(date) => setForm(f => ({ ...f, dateFin: date }))}
+    label="Date de fin "
+  />
+</div>
           <div className={styles.formGroup}>
             <label>Lieu</label>
             <input
@@ -566,6 +686,17 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+      {/* Toast notifications */}
+<div className={styles.toastContainer}>
+  {notifications.map(notification => (
+    <div 
+      key={notification.id} 
+      className={`${styles.toast} ${styles[notification.type]}`}
+    >
+      {notification.message}
+    </div>
+  ))}
+</div>
     </div>
   );
 }
