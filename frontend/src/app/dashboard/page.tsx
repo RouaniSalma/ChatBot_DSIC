@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FrenchDateTimePicker } from './FrenchDateTimePicker'
+import { format } from 'date-fns';
 import styles from './Dashboard.module.css';
 
 // Interface alignée avec l'entité Java TypeEvenement
@@ -86,7 +87,28 @@ export default function Dashboard() {
     capaciteMax: '',
     lieu: '',
   });
-
+// Fonction d'affichage
+// Fonction d'affichage corrigée pour le fuseau horaire
+const formatDisplayDate = (isoString: string) => {
+  if (!isoString) return '';
+  
+  try {
+    // Parse en considérant le décalage UTC+1
+    const date = new Date(isoString);
+    return date.toLocaleString('fr-FR', {
+      timeZone: 'Africa/Casablanca',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  } catch (error) {
+    console.error('Erreur de formatage:', error);
+    return isoString;
+  }
+};
   const MAX_TITRE_LENGTH = 100;
 const addNotification = (message: string, type: 'success' | 'error' | 'info') => {
   const id = Date.now();
@@ -227,86 +249,77 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
   }
 
   const handleCreate = async () => {
-  console.log('handleCreate appelé');
   setLoading(true);
-  const utilisateurId = localStorage.getItem('idUtilisateur');
   
-  if (!utilisateurId) {
-    addNotification("Utilisateur non authentifié !", 'error');
-    setLoading(false);
-    return;
-  }
-
-  const token = localStorage.getItem('token');
-  if (!token) {
-    addNotification("Token d'authentification manquant !", 'error');
-    setLoading(false);
-    return;
-  }
-
-  // Validation supplémentaire
+  // Validation requise
   if (!form.titre || !form.lieu || !form.type.idType) {
-    addNotification("Veuillez remplir tous les champs obligatoires !", 'error');
+    addNotification("Veuillez remplir tous les champs obligatoires", 'error');
     setLoading(false);
     return;
   }
-
-  // Fonction pour formater les dates pour le backend
-  const formatDateForBackend = (isoString: string) => {
-    if (!isoString) return '';
-    return isoString.substring(0, 19); // Garde seulement les 19 premiers caractères
-  };
-
+  //  LA VALIDATION DES DATES (NOUVEAU CODE)
+  const startDate = new Date(form.dateDebut);
+  const endDate = new Date(form.dateFin);
+  
+  if (endDate <= startDate) {
+    addNotification("La date de fin doit être postérieure à la date de début", 'error');
+    setLoading(false);
+    return;
+  }
   try {
-    const evenementToSend = {
-      ...form,
-      dateDebut: formatDateForBackend(form.dateDebut),
-      dateFin: formatDateForBackend(form.dateFin),
-      type: { idType: Number(form.type.idType) }
+    // Conversion ISO 8601 -> format backend
+  const formatDateForBackend = (dateString: string) => {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  // Compense le décalage du fuseau horaire
+  const timezoneOffset = date.getTimezoneOffset() * 60000;
+  const localDate = new Date(date.getTime() - timezoneOffset);
+  
+  return localDate.toISOString().slice(0, 19); // "YYYY-MM-DDTHH:mm:ss"
+};
+     const toLocalISO = (dateString: string) => {
+      const date = new Date(dateString);
+      const offset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - offset).toISOString().slice(0, 19);
     };
+    const payload = {
+      ...form,
+      dateDebut: form.dateDebut,
+      dateFin: form.dateFin,
+      type: { idType: form.type.idType } // Conversion numérique déjà faite
+    };
+    console.log('Dates envoyées:', {
+      début: payload.dateDebut,
+      fin: payload.dateFin
+    });
+    console.log('Payload envoyé:', JSON.stringify(payload, null, 2));
 
-    console.log('Données envoyées:', evenementToSend); // Pour débogage
-
-    const response = await fetch(`http://localhost:8081/api/evenements?utilisateurId=${utilisateurId}`, {
+    const response = await fetch(`http://localhost:8081/api/evenements?utilisateurId=${localStorage.getItem('idUtilisateur')}`, {
       method: 'POST',
       headers: { 
-        'Content-Type': 'application/json', 
-        'Authorization': `Bearer ${token}` 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
-      body: JSON.stringify(evenementToSend),
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Erreur lors de la création");
+      const error = await response.text();
+      throw new Error(error || "Erreur serveur");
     }
 
-    const text = await response.text();
-    const createdEvent = text ? JSON.parse(text) : { titre: form.titre };
-    
-    addNotification(`Événement "${createdEvent.titre}" créé avec succès !`, 'success');
-    
+    addNotification("Événement créé avec succès", 'success');
     setModal(null);
-    setForm({
-      titre: '',
-      description: '',
-      capaciteMax: 0,
-      lieu: '',
-      dateDebut: '',
-      dateFin: '',
-      type: { idType: 0 },
-      statut: 'PROCHAIN',
-    });
-    
-    refresh(0);
-    
+    refresh();
   } catch (error) {
-    console.error("Erreur création:", error);
+    console.error('Erreur création:', error);
     addNotification(
-      `Erreur lors de la création: ${error instanceof Error ? error.message : String(error)}`,
+      `Échec de la création: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
       'error'
     );
   } finally {
+    
     setLoading(false);
   }
 };
@@ -354,7 +367,13 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
       dateFin: formatDateForBackend(form.dateFin),
       type: { idType: Number(form.type.idType) }
     };
-
+    // AJOUTEZ ICI LE CONSOLE.LOG
+    console.log('Debug Timezone:', {
+  selection: form.dateDebut,
+  asDate: new Date(form.dateDebut),
+  getTimezoneOffset: new Date(form.dateDebut).getTimezoneOffset(),
+  utcString: new Date(form.dateDebut).toUTCString()
+});
     console.log('Données envoyées:', evenementToSend); // Pour débogage
 
     const response = await fetch(`http://localhost:8081/api/evenements/${selected.idEvenement}`, {
@@ -406,6 +425,12 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
     localStorage.removeItem('token');
     router.push('/login');
   };
+  // Fonction de conversion pour l'affichage dans le formulaire
+// Fonction de conversion pour le formulaire
+const formatForFormDisplay = (isoString: string) => {
+  if (!isoString) return '';
+  return isoString; // Ne plus compenser le timezone
+};
 // Formatage des dates en français
 // Formatage des dates en français avec gestion des fuseaux horaires
 const formatFrenchDateTime = (isoString: string) => {
@@ -430,49 +455,70 @@ const formatFrenchDateTime = (isoString: string) => {
     return isoString // Retourne la valeur originale en cas d'erreur
   }
 }
+const toInputFormat = (date: Date) => {
+  // Ne surtout pas utiliser .toISOString() ici
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+
   // Helpers pour ouvrir les modales
   const openCreate = () => {
-    // Réinitialise le formulaire avec des valeurs par défaut
   const now = new Date();
-  const oneHourLater = new Date(now.getTime() + 3600000); // +1 heure
-    // Réinitialise le formulaire avec des valeurs par défaut
-    setForm({
-      titre: '',
-      description: '',
-      capaciteMax: 0,
-      lieu: '',
-      dateDebut: now.toISOString(),
-    dateFin: oneHourLater.toISOString(),
-      type: { idType: 0 },
-      statut: 'PROCHAIN',
-    });
-    setErrors({
-      titre: '',
-      description: '',
-      capaciteMax: '',
-      lieu: '',
-    });
-    setModal('create');
+  const oneHourLater = new Date(now.getTime() + 3600000);
+
+  // Formatage initial en UTC+1
+  const formatInitialDate = (date: Date) => {
+    const localDate = new Date(date.getTime() + (60 * 60000)); // +1 heure
+    return localDate.toISOString().slice(0, 19);
   };
 
+  setForm({
+    titre: '',
+    description: '',
+    capaciteMax: 0,
+    lieu: '',
+    dateDebut: formatInitialDate(now),
+    dateFin: formatInitialDate(oneHourLater),
+    type: { idType: 0 },
+    statut: 'PROCHAIN'
+  });
+
+
+
+  setErrors({
+    titre: '',
+    description: '',
+    capaciteMax: '',
+    lieu: '',
+  });
+  
+  setModal('create');
+};
+
   const openEdit = (ev: Evenement) => {
-    setSelected(ev);
-    // Prépare les dates pour les champs datetime-local
-    
-    setForm({
-      ...ev,
-      type: ev.type || { idType: 0 }, // Valeur par défaut si type est null
-      dateDebut: (ev.dateDebut),
-      dateFin: (ev.dateFin),
-    });
-    setErrors({
-      titre: '',
-      description: '',
-      capaciteMax: '',
-      lieu: '',
-    });
-    setModal('edit');
-  };
+  setSelected(ev);
+
+  setForm({
+    ...ev,
+    type: ev.type || { idType: 0 },
+    dateDebut: ev.dateDebut,
+    dateFin: ev.dateFin,
+  });
+
+  setErrors({
+    titre: '',
+    description: '',
+    capaciteMax: '',
+    lieu: '',
+  });
+  
+  setModal('edit');
+};
 
   const openDetails = (ev: Evenement) => {
     setSelected(ev);
@@ -539,7 +585,7 @@ const formatFrenchDateTime = (isoString: string) => {
                 <td>
         {types.find(t => t.idType === ev.type?.idType)?.typeEvent || 'N/A'}
       </td>
-                <td>{formatFrenchDateTime(ev.dateDebut)}</td>
+                <td>{formatDisplayDate(ev.dateDebut)}</td>
                 <td>
                   <span className={`${styles.status} ${ev.statut ? styles[ev.statut.toLowerCase()] : ''}`}>
                     {STATUTS.find(s => s.value === ev.statut)?.label || ev.statut || 'N/A'}
@@ -703,8 +749,8 @@ const formatFrenchDateTime = (isoString: string) => {
             <p><b>Description :</b> {selected.description}</p>
             <p><b>Capacité max :</b> {selected.capaciteMax}</p>
             <p><b>Type :</b> {types.find(t => t.idType === selected.type?.idType)?.typeEvent || 'N/A'}</p>
-            <p><b>Date début :</b> {formatFrenchDateTime(selected.dateDebut)}</p>
-            <p><b>Date fin :</b> {formatFrenchDateTime(selected.dateFin)}</p>
+            <p><b>Date début :</b> {formatDisplayDate(selected.dateDebut)}</p>
+            <p><b>Date fin :</b> {formatDisplayDate(selected.dateFin)}</p>
             <p><b>Lieu :</b> {selected.lieu}</p>
             <p><b>Statut :</b> {STATUTS.find(s => s.value === selected.statut)?.label || selected.statut}</p>
             <div className={styles.modalActions}>

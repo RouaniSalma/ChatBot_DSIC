@@ -1,6 +1,7 @@
 package com.proj_chatBot.backend.service;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.proj_chatBot.backend.entities.Evenement;
 import com.proj_chatBot.backend.entities.TypeEvenement;
 import com.proj_chatBot.backend.entities.Utilisateur;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -32,7 +34,7 @@ public class EvenementService {
     private UtilisateurRepository utilisateurRepository;
 
     // Création d'un événement
-    public Evenement createEvenement(Evenement evenement, Long utilisateurId) {
+    public Evenement createEvenement(@RequestBody @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "UTC")Evenement evenement, Long utilisateurId) {
         Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
         evenement.setUtilisateur(utilisateur);

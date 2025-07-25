@@ -39,7 +39,18 @@ public class EvenementController {
     @PostMapping
     public Evenement createEvenement(@RequestBody Evenement evenement, @RequestParam Long utilisateurId) {
         System.out.println("Accès autorisé au endpoint createEvenement");
-        return evenementService.createEvenement(evenement, utilisateurId);
+        System.out.println("\n=== AVANT TRAITEMENT ===");
+        System.out.println("Reçu du frontend - dateDebut: " + evenement.getDateDebut());
+        System.out.println("Reçu du frontend - dateFin: " + evenement.getDateFin());
+        System.out.println("Type des dates: " + evenement.getDateDebut().getClass().getName());
+        Evenement result = evenementService.createEvenement(evenement, utilisateurId);
+        // Log après traitement
+        System.out.println("\n=== APRÈS TRAITEMENT ===");
+        System.out.println("Retourné par le service - dateDebut: " + result.getDateDebut());
+        System.out.println("Retourné par le service - dateFin: " + result.getDateFin());
+        System.out.println("Type des dates retournées: " + result.getDateDebut().getClass().getName());
+
+        return result;
     }
 
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AGENT_WILAYA')")
