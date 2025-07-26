@@ -412,14 +412,42 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
 };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Supprimer cet événement ?')) return;
-    const token = localStorage.getItem('token');
-    await fetch(`http://localhost:8081/api/evenements/${id}`, {
+  if (!window.confirm('Supprimer cet événement ?')) return;
+  
+  const token = localStorage.getItem('token');
+  if (!token) {
+    addNotification("Token d'authentification manquant !", 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://localhost:8081/api/evenements/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` },
     });
-    refresh();
-  };
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Erreur lors de la suppression");
+    }
+
+    // Trouver l'événement supprimé pour afficher son titre dans la notification
+    const deletedEvent = evenements.find(ev => ev.idEvenement === id);
+    addNotification(
+      `Événement "${deletedEvent?.titre || ''}" supprimé avec succès !`, 
+      'success'
+    );
+    
+    refresh(pagination.currentPage);
+    
+  } catch (error) {
+    console.error("Erreur suppression:", error);
+    addNotification(
+      `Erreur lors de la suppression: ${error instanceof Error ? error.message : String(error)}`,
+      'error'
+    );
+  }
+};
 
   const handleLogout = () => {
     localStorage.removeItem('token');
