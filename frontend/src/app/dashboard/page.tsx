@@ -58,6 +58,18 @@ export default function Dashboard() {
   });
   const [evenements, setEvenements] = useState<Evenement[]>([]);
   const [types, setTypes] = useState<TypeEvenement[]>([]); // État pour les types d'événements
+  // Ajoutez cet effet pour afficher la notification de bienvenue
+useEffect(() => {
+  const welcomeFlag = localStorage.getItem('welcomeNotification');
+  const nom = localStorage.getItem('nomUtilisateur');
+  const prenom = localStorage.getItem('prenomUtilisateur');
+
+  if (welcomeFlag && nom && prenom) {
+    addNotification(`Bienvenue ${prenom} ${nom} !`, 'success');
+    // Supprimez le flag pour ne pas afficher à nouveau
+    localStorage.removeItem('welcomeNotification');
+  }
+}, []); // Exécuté une seule fois au montage
   useEffect(() => {
   console.log("Filtre changé - typeId:", filter.typeId);
   refresh(0); // Toujours rafraîchir à la première page quand le filtre change
@@ -451,6 +463,9 @@ const addNotification = (message: string, type: 'success' | 'error' | 'info') =>
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+  localStorage.removeItem('idUtilisateur');
+  localStorage.removeItem('nomUtilisateur');
+  localStorage.removeItem('prenomUtilisateur');
     router.push('/login');
   };
   // Fonction de conversion pour l'affichage dans le formulaire

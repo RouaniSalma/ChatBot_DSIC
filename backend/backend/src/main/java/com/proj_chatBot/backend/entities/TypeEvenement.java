@@ -1,6 +1,8 @@
 package com.proj_chatBot.backend.entities;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.proj_chatBot.backend.enums.Role;
 import com.proj_chatBot.backend.enums.TypeEvent;
 import jakarta.persistence.*;
@@ -22,6 +24,6 @@ public class TypeEvenement {
     private TypeEvent typeEvent; // Enum: RÉUNION, CONFÉRENCE, etc.
 
     @OneToMany(mappedBy = "type")
-    @JsonIgnore
+    @JsonIgnoreProperties("type")
     private List<Evenement> evenements;
 }

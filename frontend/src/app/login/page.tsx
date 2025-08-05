@@ -33,6 +33,12 @@ export default function LoginPage() {
       const data = await res.json();
       localStorage.setItem('token', data.token);
       localStorage.setItem('idUtilisateur', data.utilisateur.idUtilisateur);
+      // Ajoutez ces lignes pour stocker le nom et prénom
+  localStorage.setItem('nomUtilisateur', data.utilisateur.nom);
+  localStorage.setItem('prenomUtilisateur', data.utilisateur.prenom);
+  
+  // Ajoutez une notification de bienvenue dans le localStorage
+  localStorage.setItem('welcomeNotification', 'true');
       router.push('/dashboard');
     } catch (err) {
       setError('Erreur de connexion au serveur');

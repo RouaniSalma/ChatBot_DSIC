@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Service
 public class EvenementService {
@@ -39,7 +40,7 @@ public class EvenementService {
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
         evenement.setUtilisateur(utilisateur);
 
-        evenement.setDateCreation(new Date());
+        evenement.setDateCreation(LocalDateTime.now());
 
         // Associer le type existant
         TypeEvenement type = evenement.getType();

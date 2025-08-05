@@ -1,6 +1,5 @@
 package com.proj_chatBot.backend.entities;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.proj_chatBot.backend.enums.StatutEvenement;
@@ -24,12 +23,13 @@ public class Evenement {
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long idEvenement;
 
-        private Date dateCreation;
+        private LocalDateTime dateCreation;
 
         private String titre;
         private String description;
         private Integer capaciteMax;
         private String lieu;
+        private String imagePath;
     @Column(nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime dateDebut;
@@ -40,14 +40,16 @@ public class Evenement {
 
         @ManyToOne
         @JoinColumn(name = "id_type")
+        @JsonIgnoreProperties("evenements")
         private TypeEvenement type;
 
     @ManyToOne
     @JoinColumn(name = "id_utilisateur")
+    @JsonBackReference(value = "utilisateur-evenement")
     private Utilisateur utilisateur;
 
     @OneToMany(mappedBy = "evenement", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
+    @JsonManagedReference(value = "evenement-participant")
     private List<Participant> participants;
 
     @Enumerated(EnumType.STRING)

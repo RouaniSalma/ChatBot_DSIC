@@ -2,6 +2,7 @@ package com.proj_chatBot.backend.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -33,13 +34,13 @@ public class Utilisateur {
 
     @ManyToOne
     @JoinColumn(name = "id_service")
-    @JsonBackReference
+    @JsonBackReference(value = "service-utilisateur")
     private ServiceEntity service;
 
-    private Date dateCreation;
+    private LocalDateTime dateCreation;
     private LocalDateTime dernierAcces;
 
     @OneToMany(mappedBy = "utilisateur")
-    @JsonIgnore
+    @JsonManagedReference(value = "utilisateur-evenement")
     private List<Evenement> evenements;
 }

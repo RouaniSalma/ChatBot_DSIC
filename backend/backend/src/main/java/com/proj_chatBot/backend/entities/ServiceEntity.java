@@ -1,5 +1,6 @@
 package com.proj_chatBot.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -19,7 +20,12 @@ public class ServiceEntity {
     @Column(length = 50)
     private String abbreviation;
 
+    @ManyToOne
+    @JoinColumn(name = "division_id")
+    @JsonBackReference(value = "division-service")
+    private Division division;
+
     @OneToMany(mappedBy = "service")
-    @JsonManagedReference
+    @JsonManagedReference(value = "service-utilisateur")
     private List<Utilisateur> utilisateurs;
 }
