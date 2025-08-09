@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.proj_chatBot.backend.entities.Evenement;
 import com.proj_chatBot.backend.entities.TypeEvenement;
 import com.proj_chatBot.backend.entities.Utilisateur;
+import com.proj_chatBot.backend.enums.Role;
 import com.proj_chatBot.backend.enums.StatutEvenement;
 import com.proj_chatBot.backend.repository.EvenementRepository;
 import com.proj_chatBot.backend.repository.TypeEvenementRepository;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -101,13 +103,22 @@ public class EvenementService {
     }
 
     // Récupérer tous les événements
-    public List<Evenement> getAllEvenements() {
-        List<Evenement> evenements = evenementRepository.findAll();
+    public List<Evenement> getAllEvenements(Utilisateur utilisateurConnecte) {
+        List<Evenement> evenements;
+
+        if (utilisateurConnecte.getRole() == Role.ADMIN) {
+            evenements = evenementRepository.findAll(Sort.by(Sort.Direction.DESC, "dateCreation"));
+        } else {
+            evenements = evenementRepository.findByUtilisateur(utilisateurConnecte,
+                    Sort.by(Sort.Direction.DESC, "dateCreation"));
+        }
+
         for (Evenement ev : evenements) {
             ev.setStatut(calculerStatut(ev));
         }
         return evenements;
     }
+
 
     // Récupérer un événement par son ID
     public Evenement getEvenementById(Long id) {
@@ -125,26 +136,46 @@ public class EvenementService {
     // Dans EvenementService.java
 
     // Récupérer les événements paginés et filtrés
-    public Page<Evenement> getEvenementsFiltresEtPages(Optional<Long> typeId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<Evenement> getEvenementsFiltresEtPages(Optional<Long> typeId, int page, int size, Utilisateur utilisateurConnecte) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
 
-        if (typeId.isPresent()) {
-            TypeEvenement type = typeEvenementRepository.findById(typeId.get())
-                    .orElseThrow(() -> new RuntimeException("Type d'événement non trouvé"));
-            return evenementRepository.findByType(type, pageable);
+        if (utilisateurConnecte.getRole() == Role.ADMIN) {
+            if (typeId.isPresent()) {
+                TypeEvenement type = typeEvenementRepository.findById(typeId.get())
+                        .orElseThrow(() -> new RuntimeException("Type d'événement non trouvé"));
+                return evenementRepository.findByType(type, pageable);
+            } else {
+                return evenementRepository.findAll(pageable);
+            }
         } else {
-            return evenementRepository.findAll(pageable);
+            if (typeId.isPresent()) {
+                TypeEvenement type = typeEvenementRepository.findById(typeId.get())
+                        .orElseThrow(() -> new RuntimeException("Type d'événement non trouvé"));
+                return evenementRepository.findByTypeAndUtilisateur(type, utilisateurConnecte, pageable);
+            } else {
+                return evenementRepository.findByUtilisateur(utilisateurConnecte, pageable);
+            }
         }
     }
-
     // Compter les événements par type
-    public long countEvenementsByType(Optional<Long> typeId) {
-        if (typeId.isPresent()) {
-            TypeEvenement type = typeEvenementRepository.findById(typeId.get())
-                    .orElseThrow(() -> new RuntimeException("Type d'événement non trouvé"));
-            return evenementRepository.countByType(type);
+    public long countEvenementsByType(Optional<Long> typeId, Utilisateur utilisateurConnecte) {
+        if (utilisateurConnecte.getRole() == Role.ADMIN) {
+            if (typeId.isPresent()) {
+                TypeEvenement type = typeEvenementRepository.findById(typeId.get())
+                        .orElseThrow(() -> new RuntimeException("Type d'événement non trouvé"));
+                return evenementRepository.countByType(type);
+            } else {
+                return evenementRepository.count();
+            }
         } else {
-            return evenementRepository.count();
+            if (typeId.isPresent()) {
+                TypeEvenement type = typeEvenementRepository.findById(typeId.get())
+                        .orElseThrow(() -> new RuntimeException("Type d'événement non trouvé"));
+                return evenementRepository.countByTypeAndUtilisateur(type, utilisateurConnecte);
+            } else {
+                return evenementRepository.countByUtilisateur(utilisateurConnecte);
+            }
         }
     }
+
 }

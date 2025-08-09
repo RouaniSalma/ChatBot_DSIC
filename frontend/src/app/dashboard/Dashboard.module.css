@@ -2,31 +2,53 @@
 .container {
   min-height: 100vh;
   background-color: #f5f7fa;
+  flex-direction: column;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding: 0; /* ← important pour supprimer tout décalage */
   margin: 0;   
 }
+/* Main Content Styles */
+.mainContent {
+  flex: 1;
+  padding: 2rem;
+}
 
+/* Footer Styles (identique au login) */
+.footer {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  padding: 1.5rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.7);
+  margin-top: auto; /* Important pour le positionnement en bas */
+}
 /* Header Styles */
 .header {
-  width: 100vw; /* toute la largeur de l'écran */
-  margin: 0; /* supprime tout espace autour */
-  padding: 0 2rem; /* espace interne seulement gauche/droite */
+  width: 100vw;
+  margin: 0;
+  padding: 0 2rem;
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
   background-color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
   z-index: 100;
   border-bottom: 3px solid #d1d5db;
+  height: 80px; /* Hauteur fixe pour le header */
 }
-
+.logoContainer {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
 .logo {
-  height: 80px;
+  height: 70px;
   width: auto;
   max-width: 200px;
   object-fit: contain;
@@ -512,12 +534,14 @@
 .appTitle {
   position: relative;
   display: inline-block;
-  font-size: 2.6rem;
-  font-weight: 800;
+  font-size: 1,75rem;
+  font-weight: 700;
   color: #1e293b;
   text-transform: uppercase;
   letter-spacing: 3px;
   margin: 0;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  margin-right: auto;
   padding-left: 1rem;
   font-family: 'Roboto', 'Segoe UI', sans-serif;
   text-align: center;
@@ -537,12 +561,76 @@
   border-radius: 3px;
 }
 
+/* User Dropdown Styles */
+/* User Dropdown Styles */
+.userDropdown {
+  position: relative;
+  margin-left: auto; /* Pousse le dropdown à droite */
+}
 
-.branding {
+.userBtn {
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  color: #054f9e; /* Couleur verte pour le nom */
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700; /* Plus gras */
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  padding-left: 1rem;
+  gap: 0.3rem;
+  transition: all 0.2s;
+}
+
+.userName {
+  color: #054f9e; /* Couleur verte */
+  font-weight: 700;
+}
+
+.dropdownIcon {
+  font-size: 0.6rem;
+  color: #054f9e; /* Couleur verte */
+}
+
+.dropdownContent {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: white;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+  z-index: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.dropdownContent button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #1f2937;
+  transition: background-color 0.2s;
+}
+
+.dropdownContent button:hover {
+  background-color: #f3f4f6;
+}
+
+.userDropdown:hover .dropdownContent {
+  display: block;
+}
+
+.userBtn:hover {
+  background-color: #a3a7ba; /* Fond vert très clair au survol */
+}
+.branding {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 .toastContainer {
   position: fixed;
@@ -577,4 +665,70 @@
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
+.userManagement {
+  margin: 2rem 0;
+  padding: 1rem;
+  background: #f5f5f5;
+}
+/* Section Selector Styles */
+.sectionSelector {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1rem;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin: 1.5rem 2rem;
+}
 
+.sectionSelect {
+  padding: 0.75rem 1.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1f2937;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 200px;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
+.sectionSelect:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sectionSelector {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
+    margin: 1rem;
+  }
+  
+  .sectionSelect {
+    width: 100%;
+  }
+  
+  .addBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+.errorText {
+  color: #f44336;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  display: block;
+}

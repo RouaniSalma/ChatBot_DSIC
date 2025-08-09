@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -32,7 +33,7 @@ public class AuthController {
     private CustomUserDetailsService userDetailsService;
 
     @Autowired
-    private UtilisateurRepository utilisateurRepository; // <-- Ajoute ceci
+    private UtilisateurRepository utilisateurRepository;
 
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody AuthRequest authRequest) {
@@ -42,12 +43,14 @@ public class AuthController {
         UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getEmail());
         String role = userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
 
-        // Récupère l'utilisateur depuis la base
-        Utilisateur utilisateur = utilisateurRepository.findByEmail(authRequest.getEmail());
+        // Correction: Utilisation de orElseThrow pour gérer l'Optional
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(authRequest.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé"));
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", jwtUtil.generateToken(userDetails.getUsername(), role));
-        response.put("utilisateur", utilisateur); // tu peux aussi ne mettre que l'id si tu veux
+        response.put("utilisateur", utilisateur);
+
         String token = jwtUtil.generateToken(userDetails.getUsername(), role);
         System.out.println("Token généré: " + token);
         response.put("token", token);

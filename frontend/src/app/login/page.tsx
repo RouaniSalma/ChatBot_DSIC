@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {jwtDecode } from 'jwt-decode';
 import styles from './Login.module.css';
 
 export default function LoginPage() {
@@ -31,12 +32,16 @@ export default function LoginPage() {
       }
 
       const data = await res.json();
+      // Décodage du token JWT pour extraire le role et email
+      const decoded: any = jwtDecode(data.token);
       localStorage.setItem('token', data.token);
       localStorage.setItem('idUtilisateur', data.utilisateur.idUtilisateur);
       // Ajoutez ces lignes pour stocker le nom et prénom
   localStorage.setItem('nomUtilisateur', data.utilisateur.nom);
   localStorage.setItem('prenomUtilisateur', data.utilisateur.prenom);
-  
+   // Stockage du role et email depuis le token décodé
+      localStorage.setItem('role', decoded.role);
+      localStorage.setItem('email', decoded.sub);
   // Ajoutez une notification de bienvenue dans le localStorage
   localStorage.setItem('welcomeNotification', 'true');
       router.push('/dashboard');

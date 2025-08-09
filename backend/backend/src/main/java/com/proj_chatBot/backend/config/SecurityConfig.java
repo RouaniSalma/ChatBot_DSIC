@@ -40,6 +40,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/types-evenement/**").permitAll() // <-- AJOUTER CETTE LIGNE
                         .requestMatchers("/public").permitAll()
+                        .requestMatchers("/api/utilisateurs/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/divisions", "/api/services").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

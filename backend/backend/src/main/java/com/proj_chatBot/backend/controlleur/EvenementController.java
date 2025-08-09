@@ -2,8 +2,10 @@ package com.proj_chatBot.backend.controlleur;
 
 import com.proj_chatBot.backend.entities.Evenement;
 import com.proj_chatBot.backend.entities.TypeEvenement;
+import com.proj_chatBot.backend.entities.Utilisateur;
 import com.proj_chatBot.backend.repository.EvenementRepository;
 import com.proj_chatBot.backend.repository.TypeEvenementRepository;
+import com.proj_chatBot.backend.repository.UtilisateurRepository;
 import com.proj_chatBot.backend.service.EvenementService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -12,8 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -33,7 +37,8 @@ public class EvenementController {
     private TypeEvenementRepository typeEvenementRepository;
     @Autowired
     private EvenementRepository evenementRepository;
-
+    @Autowired
+    private UtilisateurRepository utilisateurRepository;
 
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AGENT_WILAYA')")
     @PostMapping
@@ -59,13 +64,19 @@ public class EvenementController {
         return evenementService.updateEvenement(id, evenementDetails);
     }
 
+
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AGENT_WILAYA')")
     @GetMapping
-    public List<Evenement> getAllEvenements() {
+    public List<Evenement> getAllEvenements(Authentication authentication) {
         System.out.println("Accès autorisé au endpoint getAllEvenements");
-        return evenementService.getAllEvenements();
-    }
 
+        // Modification ici - utilisation de l'email directement
+        String email = authentication.getName();
+        Utilisateur utilisateurConnecte = utilisateurRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        return evenementService.getAllEvenements(utilisateurConnecte);
+    }
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AGENT_WILAYA')")
     @GetMapping("/{id}")
     public Evenement getEvenementById(@PathVariable Long id) {
@@ -82,23 +93,23 @@ public class EvenementController {
 
     @GetMapping("/filter")
     public ResponseEntity<Map<String, Object>> getEvenementsFiltres(
-            @RequestParam(required = false) Long typeId, // Reste en Long
+            @RequestParam(required = false) Long typeId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "4") int size) {
-
-        log.info("TypeID reçu: {}", typeId);
+            @RequestParam(defaultValue = "4") int size,
+            Authentication authentication) {
 
         try {
-            Page<Evenement> pageEvenements;
-            Pageable pageable = PageRequest.of(page, size);
+            // Récupération de l'utilisateur connecté par email
+            String email = authentication.getName();
+            Utilisateur utilisateurConnecte = utilisateurRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-            if (typeId != null) {
-                TypeEvenement type = typeEvenementRepository.findById(typeId)
-                        .orElseThrow(() -> new RuntimeException("Type non trouvé"));
-                pageEvenements = evenementRepository.findByType(type, pageable);
-            } else {
-                pageEvenements = evenementRepository.findAll(pageable);
-            }
+            Page<Evenement> pageEvenements = evenementService.getEvenementsFiltresEtPages(
+                    Optional.ofNullable(typeId),
+                    page,
+                    size,
+                    utilisateurConnecte
+            );
 
             // Mise à jour des statuts
             pageEvenements.getContent().forEach(ev -> {
@@ -113,8 +124,6 @@ public class EvenementController {
 
             return ResponseEntity.ok(response);
 
-        } catch (ResponseStatusException e) {
-            throw e; // Re-lance les exceptions de réponse déjà gérées
         } catch (Exception e) {
             log.error("Erreur lors du filtrage des événements", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

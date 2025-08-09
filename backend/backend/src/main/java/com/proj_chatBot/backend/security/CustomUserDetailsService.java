@@ -15,21 +15,20 @@ public class CustomUserDetailsService implements UserDetailsService {
     private UtilisateurRepository utilisateurRepository;
 
     public Utilisateur getUtilisateurByEmail(String email) {
-        return utilisateurRepository.findByEmail(email);
+        return utilisateurRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé"));
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Utilisateur user = utilisateurRepository.findByEmail(email);
-        if (user == null) {
-            throw new UsernameNotFoundException("Utilisateur non trouvé");
-        }
+        // Correction: Utilisation de orElseThrow
+        Utilisateur user = utilisateurRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé"));
 
-        // Si getRole() retourne un Enum, utilise .name()
         return User.builder()
                 .username(user.getEmail())
                 .password(user.getMotDePasseHash())
-                .authorities(new SimpleGrantedAuthority(user.getRole().name())) // authority: 'ADMIN'
+                .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
                 .build();
     }
 }
