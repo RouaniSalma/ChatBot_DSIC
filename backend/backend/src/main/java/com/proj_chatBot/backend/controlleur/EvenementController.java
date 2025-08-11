@@ -1,5 +1,8 @@
 package com.proj_chatBot.backend.controlleur;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.beans.factory.annotation.Value;
 import com.proj_chatBot.backend.entities.Evenement;
 import com.proj_chatBot.backend.entities.TypeEvenement;
 import com.proj_chatBot.backend.entities.Utilisateur;
@@ -16,20 +19,29 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import org.springframework.security.access.prepost.PreAuthorize;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.util.function.SupplierUtils.resolve;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/evenements")
 public class EvenementController {
+    private final String uploadDir;
 
     @Autowired
     private EvenementService evenementService;
@@ -40,29 +52,100 @@ public class EvenementController {
     @Autowired
     private UtilisateurRepository utilisateurRepository;
 
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AGENT_WILAYA')")
-    @PostMapping
-    public Evenement createEvenement(@RequestBody Evenement evenement, @RequestParam Long utilisateurId) {
-        System.out.println("Accès autorisé au endpoint createEvenement");
-        System.out.println("\n=== AVANT TRAITEMENT ===");
-        System.out.println("Reçu du frontend - dateDebut: " + evenement.getDateDebut());
-        System.out.println("Reçu du frontend - dateFin: " + evenement.getDateFin());
-        System.out.println("Type des dates: " + evenement.getDateDebut().getClass().getName());
-        Evenement result = evenementService.createEvenement(evenement, utilisateurId);
-        // Log après traitement
-        System.out.println("\n=== APRÈS TRAITEMENT ===");
-        System.out.println("Retourné par le service - dateDebut: " + result.getDateDebut());
-        System.out.println("Retourné par le service - dateFin: " + result.getDateFin());
-        System.out.println("Type des dates retournées: " + result.getDateDebut().getClass().getName());
-
-        return result;
+    @Autowired
+    public EvenementController(@Value("${app.upload.dir}") String uploadDir) {
+        this.uploadDir = uploadDir;
     }
 
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AGENT_WILAYA')")
-    @PutMapping("/{id}")
-    public Evenement updateEvenement(@PathVariable Long id, @RequestBody Evenement evenementDetails) {
-        return evenementService.updateEvenement(id, evenementDetails);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createEvenement(
+            @RequestPart("evenement") String evenementStr,
+            @RequestParam Long utilisateurId,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
+            Evenement evenement = mapper.readValue(evenementStr, Evenement.class);
+
+            // Gestion de l'image
+            if (imageFile != null && !imageFile.isEmpty()) {
+                String imageName = UUID.randomUUID() + "_" + imageFile.getOriginalFilename();
+                Path imagePath = Paths.get(uploadDir).resolve(imageName);
+                Files.createDirectories(imagePath.getParent());
+                Files.copy(imageFile.getInputStream(), imagePath, StandardCopyOption.REPLACE_EXISTING);
+                evenement.setImagePath(imageName);
+            }
+
+            Evenement savedEvent = evenementService.createEvenement(evenement, utilisateurId);
+            return ResponseEntity.ok(savedEvent);
+
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.badRequest().body("Format JSON invalide");
+        } catch (IOException e) {
+            log.error("Erreur de traitement de fichier", e);
+            return ResponseEntity.internalServerError().body("Erreur de traitement de fichier");
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        } catch (Exception e) {
+            log.error("Erreur inattendue", e);
+            return ResponseEntity.internalServerError().body("Erreur interne du serveur");
+        }
     }
+
+
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AGENT_WILAYA')")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateEvenement(
+            @PathVariable Long id,
+            @RequestPart("evenement") String evenementStr,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) throws IOException {
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
+            Evenement evenementDetails = mapper.readValue(evenementStr, Evenement.class);
+
+            // Récupérer l'événement existant
+            Evenement existingEvent = evenementRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Événement non trouvé"));
+
+            // Supprimer l'ancienne image si elle existe ET si une nouvelle image est fournie
+            if (imageFile != null && !imageFile.isEmpty() && existingEvent.getImagePath() != null) {
+                Path oldImagePath = Paths.get(uploadDir).resolve(existingEvent.getImagePath());
+                Files.deleteIfExists(oldImagePath);
+            }
+
+            // Gestion de la nouvelle image
+            if (imageFile != null && !imageFile.isEmpty()) {
+                String imageName = UUID.randomUUID() + "_" + imageFile.getOriginalFilename();
+                Path imagePath = Paths.get(uploadDir).resolve(imageName);
+                Files.createDirectories(imagePath.getParent());
+                Files.copy(imageFile.getInputStream(), imagePath, StandardCopyOption.REPLACE_EXISTING);
+                evenementDetails.setImagePath(imageName);
+            } else {
+                // Conserver l'ancienne image si aucune nouvelle n'est fournie
+                evenementDetails.setImagePath(existingEvent.getImagePath());
+            }
+
+            Evenement updatedEvent = evenementService.updateEvenement(id, evenementDetails);
+            return ResponseEntity.ok(updatedEvent);
+
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.badRequest().body("Format JSON invalide");
+        } catch (IOException e) {
+            log.error("Erreur de traitement de fichier", e);
+            return ResponseEntity.internalServerError().body("Erreur de traitement de fichier");
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        } catch (Exception e) {
+            log.error("Erreur inattendue", e);
+            return ResponseEntity.internalServerError().body("Erreur interne du serveur");
+        }
+    }
+
+
 
 
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AGENT_WILAYA')")
@@ -130,4 +213,5 @@ public class EvenementController {
                     .body(Collections.singletonMap("error", "Erreur interne du serveur"));
         }
     }
+
 }

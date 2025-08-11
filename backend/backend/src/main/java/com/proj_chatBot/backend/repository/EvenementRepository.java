@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.proj_chatBot.backend.entities.Evenement;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EvenementRepository extends JpaRepository<Evenement, Long> {
@@ -23,5 +24,6 @@ public interface EvenementRepository extends JpaRepository<Evenement, Long> {
 
     // Ajoutez aussi cette méthode pour le tri
     List<Evenement> findByUtilisateur(Utilisateur utilisateur, Sort sort);
+    List<Evenement> findByDateFinAfter(LocalDateTime date);
     }
 

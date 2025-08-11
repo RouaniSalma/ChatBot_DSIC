@@ -5,28 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f91649ff-7dcd-427a-a7d7-14e04a3c3db9" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/DTOs/CreateUtilisateurDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/DTOs/UtilisateurDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/DivisionController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/DivisionRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/ImagesController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/PublicEvenementController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/FileStorageService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/AuthController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/EvenementController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/EvenementController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/ServiceController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/ServiceController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/UtilisateurController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/UtilisateurController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/enums/Role.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/enums/Role.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/ParticipantController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/ParticipantController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/EvenementRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/EvenementRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/ServiceEntityRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/ServiceEntityRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/UtilisateurRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/UtilisateurRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/security/CustomUserDetailsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/security/CustomUserDetailsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/ParticipantRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/ParticipantRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/EvenementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/EvenementService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/UtilisateurService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/UtilisateurService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/ParticipantService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/ParticipantService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/dashboard/Dashboard.module.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/dashboard/Dashboard.module.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/dashboard/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/login/page.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

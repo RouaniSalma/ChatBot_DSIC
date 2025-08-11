@@ -7,6 +7,7 @@ import com.proj_chatBot.backend.security.JwtAuthenticationFilter;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -33,14 +34,30 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {}) // <-- AJOUTE CETTE LIGNE
+                .cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Permettre l'accès public à l'authentification et aux endpoints publics
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/types-evenement/**").permitAll() // <-- AJOUTER CETTE LIGNE
+                        .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/types-evenement/**").permitAll()
                         .requestMatchers("/public").permitAll()
+                        .requestMatchers("/api/images/**").permitAll() // Permettre l'accès aux images
+
+                        // Gestion des utilisateurs réservée aux admins
                         .requestMatchers("/api/utilisateurs/**").hasAuthority("ADMIN")
+
+                        // Gestion des événements pour admins et agents
+                        .requestMatchers("/api/evenements/**").hasAnyAuthority("ADMIN", "AGENT_WILAYA")
+
+                        // Inscription des participants autorisée sans authentification
+                        .requestMatchers(HttpMethod.POST, "/api/participants/inscription/**").permitAll()
+
+                        // Consultation des participants réservée aux admins et agents
+                        .requestMatchers("/api/participants/**").hasAnyAuthority("ADMIN", "AGENT_WILAYA")
+
+                        // Autres endpoints
                         .requestMatchers("/api/divisions", "/api/services").authenticated()
                         .anyRequest().authenticated()
                 )
@@ -54,13 +71,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("*");
+        config.addAllowedOriginPattern("*"); // Plus flexible que allowedOrigins
         config.addAllowedHeader("*");
-        config.addAllowedMethod("OPTIONS");
-        config.addAllowedMethod("GET");
-        config.addAllowedMethod("POST");
-        config.addAllowedMethod("PUT");
-        config.addAllowedMethod("DELETE"); // <-- C'est cette ligne qui débloque DELETE !
+        config.addAllowedMethod("*"); // Autorise toutes les méthodes
+        config.addExposedHeader("Authorization"); // Important pour JWT
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }

@@ -75,6 +75,8 @@ interface Evenement {
   dateFin: string;
   type: { idType: number };
   statut: string;
+  imageFile?: File; // Ajout pour le fichier image
+  imagePath?: string;
   // Les autres champs comme 'utilisateur' et 'participants' ne sont pas nécessaires pour le formulaire.
 }
 interface PaginatedResponse {
@@ -668,59 +670,39 @@ useEffect(() => {
   }
 
   const handleCreate = async () => {
-  setLoading(true);
-  
-  // Validation requise
-  if (!form.titre || !form.lieu || !form.type.idType) {
-    addNotification("Veuillez remplir tous les champs obligatoires", 'error');
-    setLoading(false);
+  const token = localStorage.getItem('token');
+  if (!token) {
+    addNotification("Authentification requise", 'error');
     return;
   }
-  //  LA VALIDATION DES DATES (NOUVEAU CODE)
-  const startDate = new Date(form.dateDebut);
-  const endDate = new Date(form.dateFin);
-  
-  if (endDate <= startDate) {
-    addNotification("La date de fin doit être postérieure à la date de début", 'error');
-    setLoading(false);
-    return;
-  }
-  try {
-    // Conversion ISO 8601 -> format backend
-  const formatDateForBackend = (dateString: string) => {
-  if (!dateString) return '';
-  
-  const date = new Date(dateString);
-  // Compense le décalage du fuseau horaire
-  const timezoneOffset = date.getTimezoneOffset() * 60000;
-  const localDate = new Date(date.getTime() - timezoneOffset);
-  
-  return localDate.toISOString().slice(0, 19); // "YYYY-MM-DDTHH:mm:ss"
-};
-     const toLocalISO = (dateString: string) => {
-      const date = new Date(dateString);
-      const offset = date.getTimezoneOffset() * 60000;
-      return new Date(date.getTime() - offset).toISOString().slice(0, 19);
-    };
-    const payload = {
-      ...form,
-      dateDebut: form.dateDebut,
-      dateFin: form.dateFin,
-      type: { idType: form.type.idType } // Conversion numérique déjà faite
-    };
-    console.log('Dates envoyées:', {
-      début: payload.dateDebut,
-      fin: payload.dateFin
-    });
-    console.log('Payload envoyé:', JSON.stringify(payload, null, 2));
 
+  const formData = new FormData();
+  
+  // Ajoutez l'événement comme JSON
+  const eventData = {
+    titre: form.titre,
+    description: form.description,
+    capaciteMax: form.capaciteMax,
+    lieu: form.lieu,
+    dateDebut: form.dateDebut,
+    dateFin: form.dateFin,
+    type: { idType: form.type.idType },
+    statut: form.statut
+  };
+  
+  formData.append('evenement', JSON.stringify(eventData));
+  
+  if (form.imageFile) {
+    formData.append('image', form.imageFile);
+  }
+
+  try {
     const response = await fetch(`http://localhost:8081/api/evenements?utilisateurId=${localStorage.getItem('idUtilisateur')}`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      headers: {
+        'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(payload)
+      body: formData
     });
 
     if (!response.ok) {
@@ -738,86 +720,53 @@ useEffect(() => {
       'error'
     );
   } finally {
-    
     setLoading(false);
   }
 };
 
   const handleEdit = async () => {
-  if (!selected?.idEvenement) {
-    addNotification("Aucun événement sélectionné !", 'error');
-    return;
-  }
+  if (!selected?.idEvenement) return;
 
   setLoading(true);
   const token = localStorage.getItem('token');
   
-  if (!token) {
-    addNotification("Token d'authentification manquant !", 'error');
-    setLoading(false);
-    return;
-  }
-
-  // Validation des champs obligatoires
-  if (!form.titre || !form.lieu || !form.type.idType) {
-    addNotification("Veuillez remplir tous les champs obligatoires !", 'error');
-    setLoading(false);
-    return;
-  }
-
-  // Validation des dates
-  if (new Date(form.dateFin) <= new Date(form.dateDebut)) {
-    addNotification("La date de fin doit être postérieure à la date de début !", 'error');
-    setLoading(false);
-    return;
-  }
-
-  // Fonction pour formater les dates pour le backend
-  const formatDateForBackend = (isoString: string) => {
-    if (!isoString) return '';
-    // Garde seulement les 19 premiers caractères (supprime le timezone)
-    return isoString.substring(0, 19);
-  };
-
   try {
-    const evenementToSend = {
-      ...form,
-      dateDebut: formatDateForBackend(form.dateDebut),
-      dateFin: formatDateForBackend(form.dateFin),
-      type: { idType: Number(form.type.idType) }
-    };
-    // AJOUTEZ ICI LE CONSOLE.LOG
-    console.log('Debug Timezone:', {
-  selection: form.dateDebut,
-  asDate: new Date(form.dateDebut),
-  getTimezoneOffset: new Date(form.dateDebut).getTimezoneOffset(),
-  utcString: new Date(form.dateDebut).toUTCString()
-});
-    console.log('Données envoyées:', evenementToSend); // Pour débogage
+    const formData = new FormData();
+    
+    // Ajouter les données de l'événement
+    formData.append('evenement', JSON.stringify({
+      titre: form.titre,
+      description: form.description,
+      capaciteMax: form.capaciteMax,
+      lieu: form.lieu,
+      dateDebut: form.dateDebut,
+      dateFin: form.dateFin,
+      type: { idType: Number(form.type.idType) },
+      statut: form.statut
+    }));
+    
+    // Ajouter le fichier image s'il existe
+    if (form.imageFile) {
+      formData.append('image', form.imageFile);
+    }
 
     const response = await fetch(`http://localhost:8081/api/evenements/${selected.idEvenement}`, {
       method: 'PUT',
       headers: { 
-        'Content-Type': 'application/json', 
-        'Authorization': `Bearer ${token}` 
+        'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(evenementToSend),
+      body: formData
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Erreur lors de la modification");
-    }
+    if (!response.ok) throw new Error("Erreur lors de la modification");
 
-    // Gestion de la réponse vide
-    const text = await response.text();
-    const updatedEvent = text ? JSON.parse(text) : { titre: form.titre };
-
-    addNotification(`Événement "${updatedEvent.titre}" modifié avec succès !`, 'success');
+    const updatedEvent = await response.json();
     
-    setModal(null);
-    setSelected(null);
+    // Mettre à jour l'état avec la nouvelle image
+    setSelected(updatedEvent);
     refresh(pagination.currentPage);
+    addNotification("Événement modifié avec succès", 'success');
+    setModal(null);
     
   } catch (error) {
     console.error("Erreur modification:", error);
@@ -829,7 +778,6 @@ useEffect(() => {
     setLoading(false);
   }
 };
-
   const handleDelete = async (id: number) => {
   if (!window.confirm('Supprimer cet événement ?')) return;
   
@@ -1230,12 +1178,43 @@ const toInputFormat = (date: Date) => {
                                 <option key={t.idType} value={t.idType}> {t.typeEvent} </option> ))} 
                                 </select> 
                                 </div>
+                                 {/* Champ image - à ajouter ici */}
+          <div className={styles.formGroup}>
+            <label>Image de l'événement</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                setForm(f => ({ 
+                  ...f, 
+                  imageFile: file || undefined 
+                }));
+              }}
+            />
+            {form.imagePath && !form.imageFile && (
+              <div className={styles.currentImage}>
+                <p>Image actuelle :</p>
+    <img 
+      src={`http://localhost:8081/api/images/${form.imagePath}?t=${Date.now()}`} 
+      alt="Current event" 
+      style={{ maxWidth: '200px', maxHeight: '200px' }}
+      onError={(e) => {
+        (e.target as HTMLImageElement).style.display = 'none';
+        console.error("Erreur de chargement de l'image", form.imagePath);
+      }}
+    />
+              </div>
+            )}
+          </div>
                                  <div className={styles.formGroup}> 
                                   <FrenchDateTimePicker selected={form.dateDebut} onChange={(date) => setForm(f => ({ ...f, dateDebut: date }))} label="Date de début " /> 
                                     </div> 
                                     <div className={styles.formGroup}> 
                                       <FrenchDateTimePicker selected={form.dateFin} onChange={(date) => setForm(f => ({ ...f, dateFin: date }))} label="Date de fin " />
                                          </div> 
+                                          {/* Dans la modale de création/modification d'événement */}
+
                                          <div className={styles.formGroup}> 
                                           <label>Lieu</label> 
                                           <input value={form.lieu} onChange={e => handleChange('lieu', e.target.value)} required /> {errors.lieu && 
@@ -1243,6 +1222,7 @@ const toInputFormat = (date: Date) => {
                                           </div> 
                                           </div> 
                                           </div> 
+                                         
                                           <div className={styles.modalActions}>
                                              <button className={`${styles.modalBtn} ${styles.secondary}`} onClick={() => setModal(null)} type="button">Annuler
                                               </button>
@@ -1256,128 +1236,26 @@ const toInputFormat = (date: Date) => {
 
 
 
-      {/* Modals */}
-      {(modal === 'create' || modal === 'edit') && (
-  <div className={styles.modalOverlay}>
-    <div className={`${styles.modal} ${styles.wideModal}`}>
-      <h2>{modal === 'create' ? 'Ajouter un événement' : 'Modifier un événement'}</h2>
-      <div className={styles.formGrid}>
-        <div className={styles.formColumn}>
-          <div className={styles.formGroup}>
-            <label>Titre</label>
-            <input
-              value={form.titre}
-              onChange={e => handleChange('titre', e.target.value)}
-              required
-              maxLength={MAX_TITRE_LENGTH}
-            />
-            {errors.titre && <span style={{ color: 'red', fontSize: '0.9em' }}>{errors.titre}</span>}
-          </div>
-          <div className={styles.formGroup}>
-            <label>Description</label>
-            <textarea
-              value={form.description}
-              onChange={e => handleChange('description', e.target.value)}
-              required
-              rows={4}
-            />
-            {errors.description && <span style={{ color: 'red', fontSize: '0.9em' }}>{errors.description}</span>}
-          </div>
-          <div className={styles.formGroup}>
-            <label>Capacité max</label>
-            <input
-              type="number"
-              value={form.capaciteMax === 0 ? '' : String(form.capaciteMax)}
-              onChange={e => {
-                // Nettoie la valeur pour enlever les zéros initiaux
-                let valStr = e.target.value.replace(/^0+/, '');
-                if (valStr === '') valStr = '1';
-                handleChange('capaciteMax', valStr);
-              }}
-              required
-              min={1}
-              inputMode="numeric"
-            />
-            {errors.capaciteMax && <span style={{ color: 'red', fontSize: '0.9em' }}>{errors.capaciteMax}</span>}
-          </div>
-        </div>
-        <div className={styles.formColumn}>
-          <div className={styles.formGroup}>
-            <label>Type d'événement</label>
-            <select
-              value={form.type?.idType || ''}
-              onChange={e => setForm(f => ({
-                ...f,
-                type: { ...f.type, idType: Number(e.target.value) }
-              }))}
-              required
-            >
-              <option value="">-- Sélectionner --</option>
-              {types.map(t => (
-                <option key={t.idType} value={t.idType}>
-                  {t.typeEvent}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.formGroup}>
-  <FrenchDateTimePicker
-    selected={form.dateDebut}
-    onChange={(date) => setForm(f => ({ ...f, dateDebut: date }))}
-    label="Date de début "
-  />
-</div>
-
-<div className={styles.formGroup}>
-  <FrenchDateTimePicker
-    selected={form.dateFin}
-    onChange={(date) => setForm(f => ({ ...f, dateFin: date }))}
-    label="Date de fin "
-  />
-</div>
-          <div className={styles.formGroup}>
-            <label>Lieu</label>
-            <input
-              value={form.lieu}
-              onChange={e => handleChange('lieu', e.target.value)}
-              required
-            />
-            {errors.lieu && <span style={{ color: 'red', fontSize: '0.9em' }}>{errors.lieu}</span>}
-          </div>
-        </div>
-      </div>
-      <div className={styles.modalActions}>
-        <button className={`${styles.modalBtn} ${styles.secondary}`} onClick={() => setModal(null)} type="button">Annuler</button>
-        <button
-  className={`${styles.modalBtn} ${styles.primary}`}
-  onClick={modal === 'create' ? handleCreate : handleEdit}
-  type="button"
-  disabled={
-    loading ||
-    !form.type.idType ||
-    !!errors.titre ||
-    !!errors.description ||
-    !!errors.capaciteMax ||
-    !!errors.lieu ||
-    !form.titre.trim() ||
-    !form.description.trim() ||
-    !form.lieu.trim() ||
-    !validateCapacite(form.capaciteMax)
-  }
->
-  {modal === 'create' ? 'Créer' : 'Enregistrer'}
-</button>
-      </div>
-    </div>
-  </div>
-  
-)}
+   
 
       {modal === 'details' && selected && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <h2>Détails de l'événement</h2>
-            <p><b>ID :</b> {selected.idEvenement}</p>
+           {selected.imagePath && (
+        <div className={styles.imagePreviewContainer}>
+          <img 
+            src={`http://localhost:8081/api/images/${selected.imagePath}?t=${Date.now()}`}
+            alt={`Image de ${selected.titre}`}
+            className={styles.imagePreview}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              console.error("Erreur de chargement de l'image", selected.imagePath);
+            }}
+          />
+        </div>
+      )}
+ <p><b>ID :</b> {selected.idEvenement}</p>
             <p><b>Titre :</b> {selected.titre}</p>
             <p><b>Description :</b> {selected.description}</p>
             <p><b>Capacité max :</b> {selected.capaciteMax}</p>

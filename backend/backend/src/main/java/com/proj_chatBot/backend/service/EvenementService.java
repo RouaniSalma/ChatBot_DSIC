@@ -1,6 +1,8 @@
 package com.proj_chatBot.backend.service;
 
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.proj_chatBot.backend.entities.Evenement;
 import com.proj_chatBot.backend.entities.TypeEvenement;
@@ -15,18 +17,28 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class EvenementService {
-
+    private static final Logger log = LoggerFactory.getLogger(EvenementService.class);
+    private final String uploadDir;
     @Autowired
     private EvenementRepository evenementRepository;
 
@@ -36,11 +48,24 @@ public class EvenementService {
     @Autowired
     private UtilisateurRepository utilisateurRepository;
 
+    @Autowired
+    public EvenementService(@Value("${app.upload.dir}") String uploadDir) {
+        this.uploadDir = uploadDir;
+    }
     // Création d'un événement
-    public Evenement createEvenement(@RequestBody @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "UTC")Evenement evenement, Long utilisateurId) {
+    public Evenement createEvenement(Evenement evenement, Long utilisateurId) {
+        // Validation des dates
+        if (evenement.getDateDebut().isAfter(evenement.getDateFin())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La date de début doit être avant la date de fin");
+        }
+
         Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-        evenement.setUtilisateur(utilisateur);
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé"));
+
+        // Vérifiez que l'utilisateur a le droit de créer un événement
+        if (!utilisateur.getRole().equals(Role.ADMIN) && !utilisateur.getRole().equals(Role.AGENT_WILAYA)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Permissions insuffisantes");
+        }
 
         evenement.setDateCreation(LocalDateTime.now());
 
@@ -83,6 +108,10 @@ public class EvenementService {
         evenement.setDateDebut(evenementDetails.getDateDebut());
         evenement.setDateFin(evenementDetails.getDateFin());
         evenement.setLieu(evenementDetails.getLieu());
+        // Mettre à jour le chemin de l'image si fourni
+        if (evenementDetails.getImagePath() != null) {
+            evenement.setImagePath(evenementDetails.getImagePath());
+        }
 
         // Recalculer le statut
         evenement.setStatut(calculerStatut(evenement));
@@ -128,12 +157,22 @@ public class EvenementService {
 
     // Supprimer un événement par son ID
     public void deleteEvenement(Long id) {
-        if (!evenementRepository.existsById(id)) {
-            throw new RuntimeException("Événement non trouvé");
+        Evenement evenement = evenementRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Événement non trouvé"));
+
+        // Supprimer l'image associée
+        if (evenement.getImagePath() != null) {
+            Path imagePath = Paths.get(uploadDir).resolve(evenement.getImagePath());
+            try {
+                Files.deleteIfExists(imagePath);
+            } catch (IOException e) {
+                log.error("Échec de la suppression de l'image", e);
+            }
         }
+
         evenementRepository.deleteById(id);
     }
-    // Dans EvenementService.java
+
 
     // Récupérer les événements paginés et filtrés
     public Page<Evenement> getEvenementsFiltresEtPages(Optional<Long> typeId, int page, int size, Utilisateur utilisateurConnecte) {
@@ -177,5 +216,20 @@ public class EvenementService {
             }
         }
     }
+    //gestion des images
+    public String storeImage(MultipartFile imageFile) throws IOException {
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageName = UUID.randomUUID() + "_" + imageFile.getOriginalFilename();
+            Path imagePath = Paths.get(uploadDir).resolve(imageName);
+            Files.createDirectories(imagePath.getParent());
+            Files.copy(imageFile.getInputStream(), imagePath, StandardCopyOption.REPLACE_EXISTING);
+            return imageName;
+        }
+        return null;
+    }
 
+    public List<Evenement> getEvenementsPublic() {
+        LocalDateTime now = LocalDateTime.now();
+        return evenementRepository.findByDateFinAfter(now);
+    }
 }
