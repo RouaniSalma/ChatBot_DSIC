@@ -19,7 +19,7 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
     @Query("SELECT u FROM Utilisateur u LEFT JOIN FETCH u.service s LEFT JOIN FETCH s.division WHERE u.idUtilisateur = :id")
     Optional<Utilisateur> findByIdWithService(@Param("id") Long id);
 
-    @Query("SELECT new com.proj_chatBot.backend.DTOs.UtilisateurDTO(u) FROM Utilisateur u LEFT JOIN FETCH u.service s LEFT JOIN FETCH s.division")
+    @Query("SELECT new com.proj_chatBot.backend.DTOs.UtilisateurDTO(u) FROM Utilisateur u LEFT JOIN FETCH u.service s LEFT JOIN FETCH s.division ORDER BY u.dateCreation DESC")
     Page<UtilisateurDTO> findAllWithServiceAndDivision(Pageable pageable);
 
     List<Utilisateur> findByService_IdService(Long idService);

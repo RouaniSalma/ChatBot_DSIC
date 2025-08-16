@@ -141,6 +141,9 @@
   letter-spacing: 0.05em;
   border-bottom: 2px solid #e5e7eb;
 }
+.table td:last-child {
+  white-space: nowrap; /* Empêche le retour à la ligne */
+}
 
 .table td {
   padding: 1.25rem 1rem;
@@ -765,4 +768,211 @@
   font-size: 0.8rem;
   margin-top: 5px;
   display: block;
+}
+/* Onglets */
+.tabs {
+  display: flex;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab, .activeTab {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.activeTab {
+  border-bottom: 2px solid #0066cc;
+  font-weight: bold;
+}
+
+.tab:hover {
+  background-color: #f5f5f5;
+}
+
+/* Contenu des onglets */
+.tabContent {
+  padding: 1rem 0;
+}
+
+/* Grille pour les détails */
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.detailsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Section participants */
+.participantsSection {
+  margin-top: 2rem;
+}
+
+.participantsSection h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+.signatureContainer {
+  position: relative;
+}
+/* Bouton signature */
+.signatureImage {
+  max-width: 150px;
+  max-height: 50px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.signatureImage:hover {
+  transform: scale(1.05);
+}
+.signatureBtn {
+  background: none;
+  border: none;
+  color: #0066cc;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.signatureBtn:hover {
+  color: #004499;
+}
+
+/* Tableau participants */
+.participantsSection {
+  margin-top: 2rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.participantsSection h3 {
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+/* Largeur des colonnes */
+.tableWrapper table {
+  width: 100%;
+}
+
+.tableWrapper th:nth-child(1) { width: 5%; } /* ID */
+.tableWrapper th:nth-child(2) { width: 15%; } /* Nom */
+.tableWrapper th:nth-child(3) { width: 15%; } /* Prénom */
+.tableWrapper th:nth-child(4) { width: 20%; } /* Email */
+.tableWrapper th:nth-child(5) { width: 15%; } /* Téléphone */
+.tableWrapper th:nth-child(6) { width: 15%; } /* Statut */
+.tableWrapper th:nth-child(7) { width: 15%; } /* Signature */
+.signatureModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.zoomedSignature {
+  max-width: 80%;
+  max-height: 80%;
+  background: white;
+  padding: 20px;
+  border: 2px solid #333;
+}
+.closeButton {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.closeButton:hover {
+  background: #4338ca;
+}
+.signatureFull {
+  background: white;
+  padding: 20px;
+  max-width: 80%;
+  max-height: 80%;
+}
+
+.signatureFull svg {
+  max-width: 100%;
+  max-height: 100%;
+}
+/* Style pour l'état vide */
+.noParticipants {
+  text-align: center;
+  padding: 2rem;
+  margin-top: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #dee2e6;
+}
+
+.emptyIllustration {
+  max-width: 200px;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.emptyMessage {
+  font-size: 1.2rem;
+  color: #343a40;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.emptySubtext {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+/* Dans votre fichier CSS */
+.participantsTitle {
+  margin: 2rem 0 1rem;
+  color: #333;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+.participantActions {
+  margin: 20px 0;
+  text-align: right;
+}
+
+.exportBtn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.exportBtn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.exportBtn:hover:not(:disabled) {
+  background-color: #45a049;
 }

@@ -17,6 +17,6 @@ public class StatutParticipant {
     private String libelle;
 
     @OneToMany(mappedBy = "statut")
-    @JsonManagedReference(value = "statut-participant")
+    @JsonIgnore
     private List<Participant> participants;
 }

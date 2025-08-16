@@ -93,7 +93,18 @@ interface Notification {
   type: 'success' | 'error' | 'info';
   id: number;
 }
-
+interface Participant {
+  idParticipant: number;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+  signature: string;
+  statut: {
+    idStatut: number;
+    libelle: string;
+  } | null; 
+}
 const STATUTS = [
   { value: 'PROCHAIN', label: 'À venir' },
   { value: 'EN_COURS', label: 'En cours' },
@@ -115,6 +126,8 @@ const [userErrors, setUserErrors] = useState({
   prenom: '',
   motDePasseHash: ''
 });
+const [selectedSignature, setSelectedSignature] = useState<string | null>(null);
+const [participants, setParticipants] = useState<Participant[]>([]);
   const [currentSection, setCurrentSection] = useState<DashboardSection>(DashboardSection.EVENTS);
   const [role, setRole] = useState<string | null>(null);
   const [users, setUsers] = useState<Utilisateur[]>([]);
@@ -236,6 +249,37 @@ useEffect(() => {
     capaciteMax: '',
     lieu: '',
   });
+  const fetchParticipants = async (evenementId: number) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(
+      `http://localhost:8081/api/participants/evenement/${evenementId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    
+    if (!response.ok) throw new Error('Erreur serveur');
+    
+    const data = await response.json();
+    
+    // Transformez les données pour inclure correctement le statut
+    const participantsWithStatus = data.map((p: any) => ({
+      ...p,
+      statut: p.statut || null // Assure que statut est null si non défini
+    }));
+    
+    setParticipants(participantsWithStatus);
+  } catch (error) {
+    console.error('Erreur fetchParticipants:', error);
+    addNotification(
+      error instanceof Error ? error.message : "Erreur lors de la récupération des participants",
+      'error'
+    );
+  }
+};
   // Dans fetchUsers()
 const fetchUsers = async (page = userPagination.currentPage) => {
   try {
@@ -305,7 +349,109 @@ const fetchDivisionsAndServices = async () => {
     console.error("Erreur chargement divisions:", error);
   }
 };
+const handleDeleteParticipant = async (participantId: number) => {
+  if (!window.confirm('Supprimer ce participant ?')) return;
+  
+  const token = localStorage.getItem('token');
+  if (!token) {
+    addNotification("Token d'authentification manquant !", 'error');
+    return;
+  }
 
+  try {
+    const response = await fetch(`http://localhost:8081/api/participants/${participantId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Erreur lors de la suppression");
+    }
+
+    addNotification("Participant supprimé avec succès !", 'success');
+    
+    // Recharger la liste des participants
+    if (selected?.idEvenement) {
+      fetchParticipants(selected.idEvenement);
+    }
+    
+  } catch (error) {
+    console.error("Erreur suppression:", error);
+    addNotification(
+      `Erreur lors de la suppression: ${error instanceof Error ? error.message : String(error)}`,
+      'error'
+    );
+  }
+};
+const handleExportCsv = async () => {
+  if (!selected?.idEvenement) {
+    addNotification("Aucun événement sélectionné", 'error');
+    return;
+  }
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    addNotification("Token d'authentification manquant !", 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `http://localhost:8081/api/participants/export-csv/${selected.idEvenement}`,
+      {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'text/csv; charset=utf-8'
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Erreur lors de l'export");
+    }
+
+    let csvData = await response.text();
+
+    // 1. Forcer le téléphone à être interprété comme texte par Excel
+    csvData = csvData.split('\n').map((line, index) => {
+      if (index === 0) return line; // Garder l'en-tête
+      
+      const columns = line.split(',');
+      if (columns.length > 4 && columns[4]) {
+        // Ajouter ="..." autour du numéro pour forcer le format texte dans Excel
+        columns[4] = `="${columns[4].replace(/"/g, '')}"`;
+      }
+      return columns.join(',');
+    }).join('\n');
+
+    // 2. Ajouter l'identifieur UTF-8 BOM pour Excel
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + csvData], { type: 'text/csv;charset=utf-8;' });
+    
+    // 3. Téléchargement
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `participants_${selected.titre}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Nettoyage
+    window.URL.revokeObjectURL(url);
+    a.remove();
+
+    addNotification("Export CSV réussi !", 'success');
+
+  } catch (error) {
+    console.error("Erreur export CSV:", error);
+    addNotification(
+      `Erreur lors de l'export: ${error instanceof Error ? error.message : String(error)}`,
+      'error'
+    );
+  }
+};
 const handleCreateUser = async () => {
   // Vérification des champs obligatoires
   if (!userForm.email || !userForm.nom || !userForm.prenom || !userForm.motDePasseHash) {
@@ -918,10 +1064,12 @@ const toInputFormat = (date: Date) => {
   setModal('edit');
 };
 
-  const openDetails = (ev: Evenement) => {
-    setSelected(ev);
-    setModal('details');
-  };
+const openDetails = (ev: Evenement) => {
+  setSelected(ev);
+  setModal('details');
+  // Charge les participants immédiatement
+  fetchParticipants(ev.idEvenement!);
+};
  console.log('types:', types);
   return (
   <div className={styles.container}>
@@ -1086,37 +1234,39 @@ const toInputFormat = (date: Date) => {
                 <td>{user.service?.division?.nom || 'Non attribué'}</td>
                 <td>{user.service?.intitule || 'Non attribué'}</td>
                 <td>
-  <button 
-    className={styles.actionBtn} 
-    title="Modifier" 
-    onClick={() => {
-      setSelectedUser(user);
-      setUserForm({
-        ...user,
-        service: user.service || undefined
-      });
-      const divisionId = divisions.find(d => 
-        d.nom === user.service?.division?.nom
-      )?.idDivision || null;
-      setSelectedDivision(divisionId);
-      if (divisionId) {
-        fetchServicesByDivision(divisionId).then(() => {
-          setUserModal('edit');
+  <div className={styles.actionButtonsContainer}>
+    <button 
+      className={styles.actionBtn} 
+      title="Modifier" 
+      onClick={() => {
+        setSelectedUser(user);
+        setUserForm({
+          ...user,
+          service: user.service || undefined
         });
-      } else {
-        setUserModal('edit');
-      }
-    }}
-  >
-    ✏️
-  </button>
-  <button 
-    className={styles.actionBtn} 
-    title="Supprimer" 
-    onClick={() => handleDeleteUser(user.idUtilisateur!)}
-  >
-    🗑️
-  </button>
+        const divisionId = divisions.find(d => 
+          d.nom === user.service?.division?.nom
+        )?.idDivision || null;
+        setSelectedDivision(divisionId);
+        if (divisionId) {
+          fetchServicesByDivision(divisionId).then(() => {
+            setUserModal('edit');
+          });
+        } else {
+          setUserModal('edit');
+        }
+      }}
+    >
+      ✏️
+    </button>
+    <button 
+      className={styles.actionBtn} 
+      title="Supprimer" 
+      onClick={() => handleDeleteUser(user.idUtilisateur!)}
+    >
+      🗑️
+    </button>
+  </div>
 </td>
               </tr>
             ))}
@@ -1238,39 +1388,130 @@ const toInputFormat = (date: Date) => {
 
    
 
-      {modal === 'details' && selected && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <h2>Détails de l'événement</h2>
-           {selected.imagePath && (
-        <div className={styles.imagePreviewContainer}>
-          <img 
-            src={`http://localhost:8081/api/images/${selected.imagePath}?t=${Date.now()}`}
-            alt={`Image de ${selected.titre}`}
-            className={styles.imagePreview}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-              console.error("Erreur de chargement de l'image", selected.imagePath);
-            }}
-          />
-        </div>
-      )}
- <p><b>ID :</b> {selected.idEvenement}</p>
+    {modal === 'details' && selected && (
+  <div className={styles.modalOverlay}>
+    <div className={`${styles.modal} ${styles.wideModal}`}>
+      <h2>Détails de l'événement</h2>
+      
+      {/* Supprimez les onglets */}
+      
+      <div className={styles.tabContent}>
+        {selected.imagePath && (
+          <div className={styles.imagePreviewContainer}>
+            <img 
+              src={`http://localhost:8081/api/images/${selected.imagePath}?t=${Date.now()}`}
+              alt={`Image de ${selected.titre}`}
+              className={styles.imagePreview}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+                console.error("Erreur de chargement de l'image", selected.imagePath);
+              }}
+            />
+          </div>
+        )}
+        
+        {/* Détails de l'événement */}
+        <div className={styles.detailsGrid}>
+          <div className={styles.detailsColumn}>
+            <p><b>ID :</b> {selected.idEvenement}</p>
             <p><b>Titre :</b> {selected.titre}</p>
             <p><b>Description :</b> {selected.description}</p>
             <p><b>Capacité max :</b> {selected.capaciteMax}</p>
+          </div>
+          <div className={styles.detailsColumn}>
             <p><b>Type :</b> {types.find(t => t.idType === selected.type?.idType)?.typeEvent || 'N/A'}</p>
             <p><b>Date début :</b> {formatDisplayDate(selected.dateDebut)}</p>
             <p><b>Date fin :</b> {formatDisplayDate(selected.dateFin)}</p>
             <p><b>Lieu :</b> {selected.lieu}</p>
             <p><b>Statut :</b> {STATUTS.find(s => s.value === selected.statut)?.label || selected.statut}</p>
-            <div className={styles.modalActions}>
-              <button className={`${styles.modalBtn} ${styles.primary}`} onClick={() => setModal(null)}>Fermer</button>
-            </div>
           </div>
         </div>
-      )}
-   
+        
+        {/* Affichez directement les participants avec un titre */}
+        <h3 className={styles.participantsTitle}>Liste des participants</h3>
+        
+        {/* Tableau des participants */}
+        {participants.length > 0 ? (
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nom</th>
+                  <th>Prénom</th>
+                  <th>Email</th>
+                  <th>Téléphone</th>
+                  <th>Statut</th>
+                  <th>Signature</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {participants.map(p => (
+                  <tr key={p.idParticipant}>
+                    <td>{p.idParticipant}</td>
+                    <td>{p.nom}</td>
+                    <td>{p.prenom}</td>
+                    <td>{p.email}</td>
+                    <td>{p.telephone}</td>
+                    <td>{p.statut?.libelle || 'N/A'}</td>
+                    <td>
+                      {p.signature ? (
+                        <img 
+                          src={p.signature.startsWith('data:image') ? 
+                               p.signature : 
+                               `data:image/svg+xml;base64,${btoa(p.signature)}`}
+                          alt="Signature"
+                          className={styles.signatureImage}
+                        />
+                      ) : 'N/A'}
+                    </td>
+                     <td>
+        <button 
+          className={styles.actionBtn} 
+          title="Supprimer" 
+          onClick={() => handleDeleteParticipant(p.idParticipant)}
+        >
+          🗑️
+        </button>
+      </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className={styles.noParticipants}>
+            
+            <p className={styles.emptyMessage}>
+              Aucun participant inscrit pour le moment
+            </p>
+          </div>
+        )}
+      </div>
+      <div className={styles.participantActions}>
+  <button 
+    className={styles.exportBtn}
+    onClick={handleExportCsv}
+    disabled={participants.length === 0}
+  >
+    Exporter en CSV
+  </button>
+</div>
+      <div className={styles.modalActions}>
+        <button 
+          className={`${styles.modalBtn} ${styles.primary}`} 
+          onClick={() => {
+            setModal(null);
+            setParticipants([]);
+          }}
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
 {/* Modal création/édition utilisateur */}
 {/* Modal création/édition utilisateur */}

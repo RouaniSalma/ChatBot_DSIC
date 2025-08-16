@@ -5,20 +5,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f91649ff-7dcd-427a-a7d7-14e04a3c3db9" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/ImagesController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/PublicEvenementController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/FileStorageService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/DTOs/ParticipantInscriptionDto.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/config/WebConfig.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/EvenementController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/EvenementController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/ImagesController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/ImagesController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/ParticipantController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/ParticipantController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/EvenementRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/EvenementRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/ParticipantRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/ParticipantRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/PublicEvenementController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/PublicEvenementController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/entities/Participant.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/entities/Participant.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/security/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/security/JwtAuthenticationFilter.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/EvenementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/EvenementService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/ParticipantService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/ParticipantService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/dashboard/Dashboard.module.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/dashboard/Dashboard.module.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/dashboard/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/uploads/images/3481f82d-7f64-405c-afdf-70614bf70485_illustration.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/uploads/images/3a5f7f81-8921-4aa6-a830-c96aa8b4c333_event2.jpeg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/uploads/images/71f9c8a1-da7f-46ec-9cc7-afc5db908e77_event1.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/next.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/next.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/LandingPage.module.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/LandingPage.module.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/page.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

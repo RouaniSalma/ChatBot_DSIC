@@ -53,23 +53,26 @@ public class EvenementService {
         this.uploadDir = uploadDir;
     }
     // Création d'un événement
-    public Evenement createEvenement(Evenement evenement, Long utilisateurId) {
+    public Evenement createEvenement(Evenement evenement) {
         // Validation des dates
         if (evenement.getDateDebut().isAfter(evenement.getDateFin())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La date de début doit être avant la date de fin");
         }
 
-        Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé"));
+        // Vérification que l'utilisateur est associé
+        if (evenement.getUtilisateur() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Aucun utilisateur associé à l'événement");
+        }
 
-        // Vérifiez que l'utilisateur a le droit de créer un événement
+        // Vérification des permissions de l'utilisateur associé
+        Utilisateur utilisateur = evenement.getUtilisateur(); // Récupération depuis l'événement
         if (!utilisateur.getRole().equals(Role.ADMIN) && !utilisateur.getRole().equals(Role.AGENT_WILAYA)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Permissions insuffisantes");
         }
 
         evenement.setDateCreation(LocalDateTime.now());
 
-        // Associer le type existant
+        // Gestion du type d'événement
         TypeEvenement type = evenement.getType();
         if (type.getIdType() != null) {
             type = typeEvenementRepository.findById(type.getIdType())
@@ -79,7 +82,7 @@ public class EvenementService {
             throw new RuntimeException("Type d'événement obligatoire !");
         }
 
-        // Calculer le statut selon les dates de l'événement
+        // Calcul du statut
         evenement.setStatut(calculerStatut(evenement));
 
         return evenementRepository.save(evenement);
@@ -229,7 +232,21 @@ public class EvenementService {
     }
 
     public List<Evenement> getEvenementsPublic() {
-        LocalDateTime now = LocalDateTime.now();
-        return evenementRepository.findByDateFinAfter(now);
+        List<Evenement> evenements = evenementRepository.findAll(Sort.by(Sort.Direction.ASC, "dateDebut"));
+
+        // Calculer le statut pour chaque événement
+        evenements.forEach(ev -> ev.setStatut(calculerStatut(ev)));
+
+        // Trier manuellement pour avoir PROCHAIN en premier
+        evenements.sort((e1, e2) -> {
+            if (e1.getStatut() == StatutEvenement.PROCHAIN && e2.getStatut() != StatutEvenement.PROCHAIN) {
+                return -1;
+            } else if (e1.getStatut() != StatutEvenement.PROCHAIN && e2.getStatut() == StatutEvenement.PROCHAIN) {
+                return 1;
+            }
+            return e1.getDateDebut().compareTo(e2.getDateDebut());
+        });
+
+        return evenements;
     }
 }

@@ -61,13 +61,23 @@ public class EvenementController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createEvenement(
             @RequestPart("evenement") String evenementStr,
-            @RequestParam Long utilisateurId,
+            Authentication authentication,
             @RequestPart(value = "image", required = false) MultipartFile imageFile) {
-
         try {
-            ObjectMapper mapper = new ObjectMapper();
+        // 1️⃣ Récupérer l'utilisateur connecté depuis le JWT
+        String email = authentication.getName();
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        // 2️⃣ Désérialiser l'événement
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        Evenement evenement = mapper.readValue(evenementStr, Evenement.class);
+        evenement.setUtilisateur(utilisateur);
+
+
             mapper.registerModule(new JavaTimeModule());
-            Evenement evenement = mapper.readValue(evenementStr, Evenement.class);
+
 
             // Gestion de l'image
             if (imageFile != null && !imageFile.isEmpty()) {
@@ -78,7 +88,7 @@ public class EvenementController {
                 evenement.setImagePath(imageName);
             }
 
-            Evenement savedEvent = evenementService.createEvenement(evenement, utilisateurId);
+            Evenement savedEvent = evenementService.createEvenement(evenement);
             return ResponseEntity.ok(savedEvent);
 
         } catch (JsonProcessingException e) {

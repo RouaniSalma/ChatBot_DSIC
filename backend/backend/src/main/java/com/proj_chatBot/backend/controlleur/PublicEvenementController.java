@@ -9,7 +9,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/public/evenements")
@@ -20,8 +25,17 @@ public class PublicEvenementController {
 
     @GetMapping
     public ResponseEntity<List<Evenement>> getEvenementsPublic() {
-        List<Evenement> evenements = evenementService.getEvenementsPublic();
-        return ResponseEntity.ok(evenements);
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Evenement> sorted = evenementService.getEvenementsPublic().stream()
+                .sorted(Comparator.comparing((Evenement e) -> {
+                    if (e.getDateDebut().isAfter(now)) return 1; // À venir en premier
+                    if (e.getDateDebut().isBefore(now) && e.getDateFin().isAfter(now)) return 2; // En cours ensuite
+                    return 3; // Terminés à la fin
+                }).thenComparing(Evenement::getDateDebut))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(sorted);
     }
 
     @GetMapping("/{id}")

@@ -19,10 +19,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 
 @Configuration
 @EnableMethodSecurity
@@ -34,10 +36,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {})
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Autoriser l'inscription sans authentification
+                        .requestMatchers("/api/participants/inscription/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/participants/disponibilite/**").permitAll()
+                        // Les autres endpoints participants protégés
+                        .requestMatchers(HttpMethod.GET, "/api/participants/**").hasAnyAuthority("ADMIN", "AGENT_WILAYA")
+                        .requestMatchers(HttpMethod.DELETE, "/api/participants/**").hasAnyAuthority("ADMIN", "AGENT_WILAYA")
+
                         // Permettre l'accès public à l'authentification et aux endpoints publics
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
@@ -56,9 +65,11 @@ public class SecurityConfig {
 
                         // Consultation des participants réservée aux admins et agents
                         .requestMatchers("/api/participants/**").hasAnyAuthority("ADMIN", "AGENT_WILAYA")
+                        // Gestion des participants (lecture/suppression)
 
                         // Autres endpoints
                         .requestMatchers("/api/divisions", "/api/services").authenticated()
+                        .requestMatchers("/api/statuts-participant/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -66,17 +77,18 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // Supprimez WebConfig et gardez seulement la configuration dans SecurityConfig
     @Bean
-    public CorsFilter corsFilter() {
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // ou votre port frontend
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("*"); // Plus flexible que allowedOrigins
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*"); // Autorise toutes les méthodes
-        config.addExposedHeader("Authorization"); // Important pour JWT
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean

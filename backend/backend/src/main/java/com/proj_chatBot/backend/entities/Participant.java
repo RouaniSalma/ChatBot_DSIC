@@ -2,6 +2,7 @@ package com.proj_chatBot.backend.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -10,6 +11,7 @@ import lombok.Data;
 public class Participant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_participant")
     private Long idParticipant;
 
     @Column(length = 100)
@@ -29,7 +31,7 @@ public class Participant {
 
     @ManyToOne
     @JoinColumn(name = "id_statut")
-    @JsonBackReference(value = "statut-participant")
+    @JsonIncludeProperties({"idStatut", "libelle"})
     private StatutParticipant statut;
 
     @ManyToOne

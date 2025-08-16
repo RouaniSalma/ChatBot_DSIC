@@ -27,11 +27,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private CustomUserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+        // Autoriser les requêtes OPTIONS
+
         String path = request.getRequestURI();
-        if (path.startsWith("/api/auth")) {
-            filterChain.doFilter(request, response);
+        String method = request.getMethod();
+
+        // Autoriser OPTIONS + endpoints publics sans vérification JWT
+        if ("OPTIONS".equalsIgnoreCase(method) ||
+                path.startsWith("/api/auth") ||
+                path.startsWith("/api/public") ||
+                path.startsWith("/api/participants/inscription/")) {
+            chain.doFilter(request, response);
             return;
         }
 
@@ -58,6 +66,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
-        filterChain.doFilter(request, response);
+        chain.doFilter(request, response);
     }
 }
