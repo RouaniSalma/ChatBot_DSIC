@@ -43,4 +43,9 @@ public class Utilisateur {
     @OneToMany(mappedBy = "utilisateur")
     @JsonManagedReference(value = "utilisateur-evenement")
     private List<Evenement> evenements;
+
+    @Column(length = 255)
+    private String resetToken;
+
+    private LocalDateTime resetTokenExpiry;
 }

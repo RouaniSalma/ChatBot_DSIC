@@ -70,6 +70,7 @@ public class SecurityConfig {
                         // Autres endpoints
                         .requestMatchers("/api/divisions", "/api/services").authenticated()
                         .requestMatchers("/api/statuts-participant/**").permitAll()
+                        .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

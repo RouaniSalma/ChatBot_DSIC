@@ -13,6 +13,7 @@ import java.util.Optional;
 
 public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> {
     Optional<Utilisateur> findByEmail(String email);
+    Optional<Utilisateur> findByResetToken(String resetToken);
     @Query("SELECT u FROM Utilisateur u WHERE u.service.idService = :serviceId")
     List<Utilisateur> findByServiceId(@Param("serviceId") Long serviceId);
     boolean existsByEmail(String email);

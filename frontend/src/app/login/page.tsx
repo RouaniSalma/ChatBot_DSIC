@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {jwtDecode } from 'jwt-decode';
+import Link from 'next/link';
 import styles from './Login.module.css';
 
 export default function LoginPage() {
@@ -110,7 +111,7 @@ export default function LoginPage() {
             </button>
 
             <div className={styles.forgot}>
-              <a href="#">Mot de passe oublié ?</a>
+              <Link href="/forgot-password">Mot de passe oublié ?</Link>
             </div>
           </form>
         </div>
