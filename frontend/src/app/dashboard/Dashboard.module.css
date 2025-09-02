@@ -45,11 +45,19 @@
   transform: translateX(-50%);
   height: 100%;
   display: flex;
+  justify-content: center;
+  gap: 20px;
   align-items: center;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: 20px auto; 
 }
 .logo {
-  height: 70px;
-  width: auto;
+  margin-left: 20rem;
+  margin-top: -6.2rem;
+  height: auto;
+  width: 70px;
   max-width: 200px;
   object-fit: contain;
   transition: transform 0.3s ease;
@@ -975,4 +983,12 @@
 
 .exportBtn:hover:not(:disabled) {
   background-color: #45a049;
+}
+.text {
+  text-align: center;  /* Texte aligné à gauche */
+}
+.text p {
+  margin: 0;
+  font-size: 16px; /* Ajuste selon le style voulu */
+  font-weight: normal; /* ou bold */
 }

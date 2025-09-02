@@ -1077,6 +1077,11 @@ const openDetails = (ev: Evenement) => {
     <header className={styles.header}>
   <h1 className={styles.appTitle}>G.E</h1>
   <div className={styles.logoContainer}>
+    <div className={styles.text}>
+    <p><strong>Wilaya de la région de l'oriental</strong></p>
+    <p><strong>Préfecture d'Oujda-Angad</strong></p>
+    <p><strong>DSIC</strong></p>
+  </div>
     <img src="/logo-maroc.png" alt="Logo" className={styles.logo} />
   </div>
   <div className={styles.userDropdown}>

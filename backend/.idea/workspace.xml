@@ -5,22 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f91649ff-7dcd-427a-a7d7-14e04a3c3db9" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/.env" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/DTOs/ForgotPasswordRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/DTOs/ResetPasswordRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/config/DotenvProcessor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/service/EmailService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/resources/META-INF/spring.factories" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/backend/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/BackendApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/BackendApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/controlleur/AuthController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/entities/Utilisateur.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/entities/Utilisateur.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/UtilisateurRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/proj_chatBot/backend/repository/UtilisateurRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/uploads/images/82a530df-80b5-47c0-8efd-aabaa95e3f66_Screenshot 2025-01-22 121410.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/login/page.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
